@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Classifier</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f9f9f8; --surface: #ffffff; --border: #e5e5e3; --border-strong: #d0d0cc;
+    --text: #1a1a18; --text-secondary: #6b6b67; --text-muted: #9b9b96;
+    --accent: #2563eb; --accent-bg: #eff6ff;
+    --success-bg: #f0fdf4; --success-text: #166534; --success-border: #bbf7d0;
+    --warning-bg: #fffbeb; --warning-border: #fde68a; --warning-text: #92400e;
+    --history-bg: #eff6ff; --history-border: #bfdbfe; --history-text: #1e40af;
+    --radius: 8px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+  .container { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 2rem; }
+  .setup-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .setup-card h2 { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .setup-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .setup-row:last-child { margin-bottom: 0; }
+  .setup-label { font-size: 13px; color: var(--text-secondary); min-width: 160px; }
+  .setup-row input[type=text], .setup-row input[type=date] { flex: 1; font-size: 13px; padding: 7px 10px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text); font-family: inherit; }
+  .setup-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
+  .dot.green { background: #22c55e; }
+  .upload-zone { border: 1.5px dashed var(--border-strong); border-radius: 12px; padding: 2.5rem; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; background: var(--surface); }
+  .upload-zone:hover, .upload-zone.drag-over { background: var(--accent-bg); border-color: var(--accent); }
+  .upload-zone input[type=file] { display: none; }
+  .upload-icon { font-size: 28px; margin-bottom: 10px; }
+  .upload-zone p { font-size: 14px; color: var(--text-secondary); margin: 0; }
+  .upload-zone small { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block; }
+  .status { font-size: 13px; color: var(--text-secondary); padding: 10px 0; min-height: 36px; display: flex; align-items: center; gap: 8px; }
+  .summary-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: var(--radius); background: var(--surface); border: 0.5px solid var(--border); color: var(--text-secondary); }
+  .chip strong { color: var(--text); font-weight: 500; }
+  .month-chip { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: var(--radius); }
+  .new-chip { background: var(--warning-bg); color: var(--warning-text); border-color: var(--warning-border); font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
+  .history-chip { background: var(--history-bg); color: var(--history-text); border-color: var(--history-border); font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
+  .dup-chip { background: #f0fdf4; color: #166534; border-color: #bbf7d0; font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
+  .table-wrap { overflow-x: auto; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  td { padding: 7px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.is-new { background: #fffdf0; }
+  tr.is-history { background: #f5f8ff; }
+  tr.is-dup { background: #f8fdf8; opacity: 0.6; }
+  tr.is-credit td { color: var(--text-muted); }
+  td select, td input[type=text] { font-size: 12px; padding: 4px 6px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
+  td select:focus, td input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .date-cell { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .merchant-cell { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .amount-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .amount-neg { color: #166534; }
+  .new-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: var(--warning-bg); color: var(--warning-text); border: 0.5px solid var(--warning-border); white-space: nowrap; }
+  .history-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: var(--history-bg); color: var(--history-text); border: 0.5px solid var(--history-border); white-space: nowrap; }
+  .dup-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #f0fdf4; color: #166534; border: 0.5px solid #bbf7d0; white-space: nowrap; }
+  .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; gap: 12px; flex-wrap: wrap; }
+  .btn-ghost { padding: 8px 16px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn-ghost:hover { background: var(--bg); }
+  .btn-primary { padding: 9px 22px; border-radius: var(--radius); border: none; background: var(--accent); color: white; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { background: var(--border-strong); cursor: not-allowed; }
+  .write-result { margin-top: 1rem; padding: 12px 16px; border-radius: var(--radius); font-size: 13px; line-height: 1.6; }
+  .write-result.success { background: var(--success-bg); border: 0.5px solid var(--success-border); color: var(--success-text); }
+  .write-result.error { background: #fef2f2; border: 0.5px solid #fecaca; color: #991b1b; }
+  .rules-section { margin-top: 2rem; border-top: 0.5px solid var(--border); padding-top: 1.5rem; }
+  .rules-section h2 { font-size: 13px; font-weight: 500; margin-bottom: 1rem; }
+  .rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
+  .rule-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 12px; }
+  .rule-merchant { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rule-arrow { color: var(--text-muted); }
+  .rule-cat { color: var(--text-secondary); white-space: nowrap; }
+  .rule-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; }
+  .rule-delete:hover { color: #ef4444; }
+  .spinner { width: 14px; height: 14px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .upload-row { grid-template-columns: 1fr; } }
+  .upload-zone.venmo-zone { border-color: #c4b5fd; }
+  .upload-zone.venmo-zone:hover, .upload-zone.venmo-zone.drag-over { background: #f5f3ff; border-color: #7c3aed; }
+  .venmo-logo { font-size: 22px; font-weight: 800; color: #5b21b6; margin-bottom: 10px; letter-spacing: -1px; }
+  tr.is-venmo { background: #faf5ff; }
+  tr.is-venmo.is-credit td { color: var(--text-muted); }
+  .venmo-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #f5f3ff; color: #5b21b6; border: 0.5px solid #c4b5fd; white-space: nowrap; }
+  .venmo-person { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; padding: 8px 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); }
+  .filter-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .filter-group { display: flex; gap: 4px; align-items: center; }
+  .filter-sep { width: 1px; height: 18px; background: var(--border); }
+  .filter-btn { font-size: 12px; padding: 3px 10px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: background 0.1s; }
+  .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .filter-btn.venmo-active { background: #7c3aed; color: white; border-color: #7c3aed; }
+  .filter-btn:hover:not(.active):not(.venmo-active) { background: var(--bg); }
+  .filter-search { flex: 1; min-width: 140px; font-size: 12px; padding: 4px 8px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text); font-family: inherit; }
+  .filter-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Budget Classifier</h1>
+  <p class="subtitle">Capital One + Venmo CSV → auto-categorize → duplicate check → Google Sheet</p>
+
+  <div class="setup-card">
+    <h2>Setup</h2>
+    <div class="setup-row">
+      <span class="setup-label">Apps Script URL</span>
+      <input type="text" id="webhook-input" placeholder="https://script.google.com/macros/s/..." oninput="saveWebhook(this.value)">
+      <div class="dot" id="webhook-dot"></div>
+    </div>
+  </div>
+
+  <div class="upload-row">
+    <div class="upload-zone" id="csv-drop"
+      onclick="document.getElementById('csv-file').click()"
+      ondragover="handleDrag(event)"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event)">
+      <input type="file" id="csv-file" accept=".csv" onchange="handleCSVFile(this.files[0])">
+      <div class="upload-icon">📂</div>
+      <p>Capital One CSV</p>
+      <small>Transaction date · Payments auto-filtered · Duplicates flagged</small>
+    </div>
+    <div class="upload-zone venmo-zone" id="venmo-drop"
+      onclick="document.getElementById('venmo-file').click()"
+      ondragover="handleDrag(event)"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleVenmoDrop(event)">
+      <input type="file" id="venmo-file" accept=".csv" onchange="handleVenmoFile(this.files[0])">
+      <div class="venmo-logo">Venmo</div>
+      <p>Venmo Statement CSV</p>
+      <small>Download from Venmo app · Sent &amp; received · Bank transfers skipped</small>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div id="results"></div>
+  <div class="rules-section" id="rules-section" style="display:none">
+    <h2>Your saved merchant rules (<span id="rules-count">0</span>)</h2>
+    <div class="rules-grid" id="rules-grid"></div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = ['Housing','Transportation','Ride Share','Grocery','Health','Workout','Dining Out','Activity','Gift','Shopping','Bike','Travel','Essentials','Work Lunch','Work Coffee','Pre-Tax Health Insurance'];
+const SPENDING_CATS = ['Necessary Costs','Fun Spending','From Savings','Investments','Saving Goals','Post Tax Income','Pre-Tax','Bonus!'];
+
+// Default colors matching the Google Sheet data validation palette.
+const DEFAULT_CATEGORY_COLORS = {
+  'Travel':                   { bg: '#1155cc', text: '#ffffff' },
+  'Grocery':                  { bg: '#b6d7a8', text: '#1a1a18' },
+  'Dining Out':               { bg: '#38761d', text: '#ffffff' },
+  'Work Lunch':               { bg: '#134f5c', text: '#ffffff' },
+  'Work Coffee':              { bg: '#1c4b5e', text: '#ffffff' },
+  'Shopping':                 { bg: '#7030a0', text: '#ffffff' },
+  'Gift':                     { bg: '#9900ff', text: '#ffffff' },
+  'Activity':                 { bg: '#c8b4e9', text: '#1a1a18' },
+  'Housing':                  { bg: '#b45309', text: '#ffffff' },
+  'Essentials':               { bg: '#783f04', text: '#ffffff' },
+  'Health':                   { bg: '#ea9999', text: '#1a1a18' },
+  'Workout':                  { bg: '#cc0000', text: '#ffffff' },
+  'Pre-Tax Health Insurance': { bg: '#9fc5e8', text: '#1a1a18' },
+  'Transportation':           { bg: '#4a86e8', text: '#ffffff' },
+  'Ride Share':               { bg: '#6d9eeb', text: '#ffffff' },
+  'Bike':                     { bg: '#76a5af', text: '#ffffff' },
+};
+const DEFAULT_SPENDING_COLORS = {
+  'Necessary Costs':  { bg: '#351c75', text: '#ffffff' },
+  'Fun Spending':     { bg: '#d0aef0', text: '#1a1a18' },
+  'Investments':      { bg: '#b6d7a8', text: '#1a1a18' },
+  'Saving Goals':     { bg: '#9fc5e8', text: '#1a1a18' },
+  'Post Tax Income':  { bg: '#38761d', text: '#ffffff' },
+  'Pre-Tax':          { bg: '#d9ead3', text: '#1a1a18' },
+  'From Savings':     { bg: '#9fc5e8', text: '#1a1a18' },
+  'Bonus!':           { bg: '#ffe599', text: '#1a1a18' },
+};
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SKIP_KEYWORDS = ['CAPITAL ONE MOBILE PYMT','CAPITAL ONE ONLINE PYMT','AUTOPAY','PAYMENT THANK YOU','MOBILE PYMT','ONLINE PYMT'];
+
+const BANK_CAT_MAP = {
+  'Dining':      { category: 'Dining Out',     spending_category: 'Fun Spending' },
+  'Grocery':     { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'Health Care': { category: 'Health',         spending_category: 'Necessary Costs' },
+  'Healthcare':  { category: 'Health',         spending_category: 'Necessary Costs' },
+  'Airfare':     { category: 'Travel',         spending_category: 'Fun Spending' },
+  'Lodging':     { category: 'Travel',         spending_category: 'Fun Spending' },
+  'Transportation': { category: 'Transportation', spending_category: 'Necessary Costs' },
+};
+
+// Keywords used to sub-classify "Transportation" bank category by merchant name
+const RIDE_SHARE_KEYWORDS = ['LYFT','UBER','RIDESHARE','RIDE SHARE','TAXI','CAB','GRAB','DIDI','GETT','VIA '];
+const BIKE_KEYWORDS = ['CITI BIK','CITIBIK','BIKE','DIVVY','BLUEBIKES','BIRD','LIME','SCOOTER'];
+
+const BUILTIN_RULES = {
+  'AMAZON RETA':           { category: 'Essentials',     spending_category: 'Necessary Costs' },
+  'AMAZON MKTPL':          { category: 'Shopping',       spending_category: 'Fun Spending' },
+  'AMAZON GROCERY':        { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'AMAZON TIPS':           { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'AMAZON.COM':            { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'CLAUDE.AI':             { category: 'Essentials',     spending_category: 'Necessary Costs' },
+  'SP BABYLIST':           { category: 'Gift',           spending_category: 'Fun Spending' },
+  'TEAMLAB':               { category: 'Activity',       spending_category: 'Fun Spending' },
+  'SEVEN-ELEVEN':          { category: 'Dining Out',     spending_category: 'Fun Spending' },
+  'FAMILYMART':            { category: 'Dining Out',     spending_category: 'Fun Spending' },
+  'WEIXIN':                { category: 'Travel',         spending_category: 'Fun Spending' },
+  'ALIPAY':                { category: 'Travel',         spending_category: 'Fun Spending' },
+  'SP WOOL AND COMPANY':   { category: 'Activity',       spending_category: 'Fun Spending' },
+  'OPENAI':                { category: 'Essentials',     spending_category: 'Necessary Costs' },
+  'NYTIMES':               { category: 'Essentials',     spending_category: 'Necessary Costs' },
+  'PAYPAL *OURARING':      { category: 'Essentials',     spending_category: 'Necessary Costs' },
+  'CITIBIK':               { category: 'Bike',           spending_category: 'Fun Spending' },
+  'LYFT':                  { category: 'Ride Share',     spending_category: 'Fun Spending' },
+  'UBER *TRIP':            { category: 'Ride Share',     spending_category: 'Fun Spending' },
+  'UBER *EATS':            { category: 'Dining Out',     spending_category: 'Fun Spending' },
+  'NJT RAIL':              { category: 'Transportation', spending_category: 'Necessary Costs' },
+  'AMTRAK':                { category: 'Travel',         spending_category: 'Fun Spending' },
+  'JRC SMART EX':          { category: 'Travel',         spending_category: 'Fun Spending' },
+  'EXPEDIA':               { category: 'Travel',         spending_category: 'Fun Spending' },
+  'HOSTELWORLD':           { category: 'Travel',         spending_category: 'Fun Spending' },
+  'PAYPAL *EXPEDIA':       { category: 'Travel',         spending_category: 'Fun Spending' },
+  'PAYPAL *AIRBNB':        { category: 'Travel',         spending_category: 'Fun Spending' },
+  'PAYPAL *NATIONALRAI':   { category: 'Travel',         spending_category: 'Fun Spending' },
+  'COT*FLT':               { category: 'Travel',         spending_category: 'Fun Spending' },
+  'GREENCAB':              { category: 'Ride Share',     spending_category: 'Fun Spending' },
+  'TEITOSANSHHIN':         { category: 'Travel',         spending_category: 'Fun Spending' },
+  'WEIXIN*DIDI':           { category: 'Travel',         spending_category: 'Fun Spending' },
+  'KARAOKEKAN':            { category: 'Activity',       spending_category: 'Fun Spending' },
+  'MSSD2':                 { category: 'Shopping',       spending_category: 'Fun Spending' },
+  'ALP*PERSONALSERVIC':    { category: 'Travel',         spending_category: 'Fun Spending' },
+  'CLASSPASS':             { category: 'Workout',        spending_category: 'Necessary Costs' },
+  'AIRALO':                { category: 'Travel',         spending_category: 'Fun Spending' },
+  'LEMONADE INSURANCE':    { category: 'Housing',        spending_category: 'Necessary Costs' },
+  'ALP*BJ CAPITAL':        { category: 'Travel',         spending_category: 'Fun Spending' },
+  'JRPLUS TOKYO TRAIN':    { category: 'Travel',         spending_category: 'Fun Spending' },
+  'DISCOVERY CAFE':        { category: 'Work Lunch',     spending_category: 'Necessary Costs' },
+  'WARNER CAFE':           { category: 'Work Lunch',     spending_category: 'Necessary Costs' },
+  'NATIONAL GRID':         { category: 'Housing',        spending_category: 'Necessary Costs' },
+  'TRADER JOE':            { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'WHOLEFDS':              { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'WEEE INC':              { category: 'Grocery',        spending_category: 'Necessary Costs' },
+  'WC TRANSIT':            { category: 'Transportation', spending_category: 'Necessary Costs' },
+  'SCHWEIGER DERMATOLOGY': { category: 'Health',         spending_category: 'Necessary Costs' },
+  'BROADWAY APOTHECARY':   { category: 'Health',         spending_category: 'Necessary Costs' },
+  'INTUIT *TURBOTAX':      { category: 'Essentials',     spending_category: 'Necessary Costs' },
+  'VENMO TO CHLOE':        { category: 'Housing',        spending_category: 'Necessary Costs' },
+  'BILT':                  { category: 'Housing',        spending_category: 'Necessary Costs' },
+};
+
+let classifiedRows = [];
+let webhookUrl = localStorage.getItem('budget_webhook') || '';
+let userRules = JSON.parse(localStorage.getItem('budget_rules') || '{}');
+let sheetHistory = {};
+let categoryColors = {}; // category name → { bg, text } from Google Sheet
+let activeFilters = { source: 'all', venmoType: 'all', search: '' };
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (webhookUrl) { document.getElementById('webhook-input').value = webhookUrl; updateDot(true); }
+  renderRulesSection();
+});
+
+function updateDot(active) { document.getElementById('webhook-dot').className = 'dot' + (active ? ' green' : ''); }
+function saveWebhook(val) { webhookUrl = val.trim(); localStorage.setItem('budget_webhook', webhookUrl); updateDot(webhookUrl.startsWith('https://')); }
+function handleDrag(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function handleDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) handleCSVFile(f); }
+function setStatus(msg, loading=false) {
+  document.getElementById('status').innerHTML = loading
+    ? `<div class="spinner"></div><span>${msg}</span>`
+    : `<span>${msg}</span>`;
+}
+
+function parseDateStr(val) {
+  if (!val) return null;
+  const parts = val.split('/');
+  if (parts.length === 3) {
+    let y = parseInt(parts[2]); if (y < 100) y += 2000;
+    const d = new Date(y, parseInt(parts[0]) - 1, parseInt(parts[1]));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(val); return isNaN(d.getTime()) ? null : d;
+}
+
+function matchMerchantRule(merchant) {
+  const m = merchant.toUpperCase().replace(/\s+/g, ' ').trim();
+  for (const [key, val] of Object.entries(userRules)) {
+    if (m.includes(key.toUpperCase())) return val;
+  }
+  for (const [key, val] of Object.entries(BUILTIN_RULES)) {
+    if (m.includes(key.toUpperCase())) return val;
+  }
+  return null;
+}
+
+// Checks sheet history for a merchant using substring matching
+function matchSheetHistory(merchant) {
+  const m = merchant.toUpperCase().replace(/\s+/g, ' ').trim();
+  for (const [key, val] of Object.entries(sheetHistory)) {
+    // Match if the new merchant contains the history key, or the history key contains the new merchant
+    if (m.includes(key) || key.includes(m)) return val;
+  }
+  return null;
+}
+
+function classifyRow(row) {
+  // Priority 1 & 2: user-saved rules + built-in rules
+  const merchantRule = matchMerchantRule(row.business);
+  if (merchantRule) return { ...merchantRule, isNew: false, isFromHistory: false };
+
+  // Priority 3: sheet history — pre-fill but flag for review
+  const historyMatch = matchSheetHistory(row.business);
+  if (historyMatch) return { ...historyMatch, isNew: true, isFromHistory: true };
+
+  // Priority 4: Capital One bank category mapping
+  // For "Transportation", sub-classify by merchant name before using the generic bucket
+  if (row.bankCategory === 'Transportation') {
+    const m = row.business.toUpperCase();
+    if (RIDE_SHARE_KEYWORDS.some(kw => m.includes(kw))) {
+      return { category: 'Ride Share', spending_category: 'Fun Spending', isNew: false, isFromHistory: false };
+    }
+    if (BIKE_KEYWORDS.some(kw => m.includes(kw))) {
+      return { category: 'Bike', spending_category: 'Fun Spending', isNew: false, isFromHistory: false };
+    }
+    return { category: 'Transportation', spending_category: 'Necessary Costs', isNew: false, isFromHistory: false };
+  }
+  const bankMatch = BANK_CAT_MAP[row.bankCategory];
+  if (bankMatch) return { ...bankMatch, isNew: false, isFromHistory: false };
+
+  // Unknown — default and flag for review
+  return { category: 'Shopping', spending_category: 'Fun Spending', isNew: true, isFromHistory: false };
+}
+
+function dupKey(r) {
+  return `${r.date}|${r.business.toUpperCase().trim()}|${Math.abs(r.amount).toFixed(2)}`;
+}
+
+function handleVenmoDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleVenmoFile(f);
+}
+
+async function handleVenmoFile(file) {
+  if (!file) return;
+  if (webhookUrl) {
+    setStatus('Fetching your sheet history…', true);
+    try {
+      const res = await fetch(webhookUrl + '?action=read', { method: 'GET' });
+      const data = await res.json();
+      if (data.success && data.merchantHistory) sheetHistory = data.merchantHistory;
+      if (data.success && data.categoryColors) categoryColors = data.categoryColors;
+    } catch (_) { sheetHistory = {}; }
+  }
+  setStatus('Reading Venmo file…');
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { rows, skipped } = parseVenmoCSV(e.target.result);
+    if (!rows.length) {
+      setStatus('No Venmo transactions found. Make sure this is a Venmo statement CSV.');
+      return;
+    }
+    const newRows = rows.map(r => {
+      const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
+      return { ...r, category, spending_category, notes: '', isNew, isFromHistory, isDuplicate: false };
+    });
+    // Replace any previously-loaded Venmo rows, keep Capital One rows
+    classifiedRows = [...classifiedRows.filter(r => r.source !== 'venmo'), ...newRows]
+      .sort((a, b) => {
+        if (a.parsedDate && b.parsedDate) return a.parsedDate - b.parsedDate;
+        if (a.parsedDate) return -1; if (b.parsedDate) return 1; return 0;
+      });
+    const autoCount = newRows.filter(r => !r.isNew).length;
+    const unknownCount = newRows.filter(r => r.isNew).length;
+    setStatus(`${rows.length} Venmo transactions loaded · ${autoCount} auto-categorized · ${unknownCount} need review · ${skipped} transfers skipped`);
+    renderResults();
+  };
+  reader.readAsText(file);
+}
+
+// Shared CSV line parser (handles quoted fields)
+function parseCSVLine(line) {
+  const cols = []; let inQuote = false, cur = '';
+  for (const ch of line) {
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+    else cur += ch;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+function parseVenmoCSV(text) {
+  const lines = text.split('\n');
+
+  // Locate the header row — Venmo CSVs have disclaimer rows before the data
+  let headerIdx = -1;
+  let headers = [];
+  for (let i = 0; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]).map(c => c.replace(/"/g, '').trim().toLowerCase());
+    if (cols.includes('datetime') || cols.includes('date')) {
+      if (cols.some(c => c === 'from' || c === 'note' || c === 'type')) {
+        headerIdx = i; headers = cols; break;
+      }
+    }
+  }
+  if (headerIdx === -1) return { rows: [], skipped: 0 };
+
+  const idxOf = (...names) => {
+    for (const name of names) {
+      const i = headers.findIndex(h => h === name || h.includes(name));
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+
+  const datetimeIdx = idxOf('datetime', 'date');
+  const typeIdx     = idxOf('type');
+  const statusIdx   = idxOf('status');
+  const noteIdx     = idxOf('note');
+  const fromIdx     = idxOf('from');
+  const toIdx       = idxOf('to');
+  // "Amount (total)" preferred; fall back to "amount"
+  const amountIdx   = headers.findIndex(h => h === 'amount (total)') !== -1
+    ? headers.findIndex(h => h === 'amount (total)')
+    : idxOf('amount');
+
+  let skipped = 0;
+  const rows = [];
+
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const cols = parseCSVLine(line);
+    const get = idx => idx >= 0 ? (cols[idx] || '').replace(/"/g, '').trim() : '';
+
+    const status = get(statusIdx);
+    const type   = get(typeIdx);
+
+    // Skip bank transfers and non-complete entries
+    if (status && status.toLowerCase() !== 'complete') { skipped++; continue; }
+    if (!type || /standard transfer|instant transfer|bank funded/i.test(type)) { skipped++; continue; }
+
+    const amountRaw = get(amountIdx).replace(/[\s,]/g, '');
+    const isReceived = amountRaw.startsWith('+');
+    const amount = parseFloat(amountRaw.replace(/[^0-9.]/g, '')) || 0;
+    if (amount === 0) { skipped++; continue; }
+
+    const dateRaw = get(datetimeIdx);
+    let d = dateRaw ? new Date(dateRaw) : null;
+    if (d && isNaN(d.getTime())) d = null;
+    const dateStr = d
+      ? `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`
+      : dateRaw;
+
+    const note   = get(noteIdx);
+    const from   = get(fromIdx);
+    const to     = get(toIdx);
+    const person = isReceived ? from : to;
+
+    // Build a descriptive "business" string for the sheet
+    let business = note || 'Venmo';
+    if (person) business += ` (${person})`;
+
+    rows.push({
+      date: dateStr,
+      parsedDate: d,
+      month: d ? MONTH_NAMES[d.getMonth()] : 'Unknown',
+      business,
+      venmoNote: note,
+      venmoPerson: person,
+      bankCategory: isReceived ? '↓ Received' : '↑ Sent',
+      amount: isReceived ? -amount : amount, // positive = expense
+      isCredit: isReceived,
+      source: 'venmo',
+    });
+  }
+  return { rows, skipped };
+}
+
+function setFilter(key, val) {
+  activeFilters[key] = val;
+  renderResults();
+}
+
+function getFilteredRows() {
+  const q = activeFilters.search.toLowerCase();
+  return classifiedRows
+    .map((r, i) => ({ ...r, _idx: i }))
+    .filter(r => {
+      if (activeFilters.source === 'capitalOne' && r.source === 'venmo') return false;
+      if (activeFilters.source === 'venmo' && r.source !== 'venmo') return false;
+      if (activeFilters.venmoType === 'sent' && (r.source !== 'venmo' || r.isCredit)) return false;
+      if (activeFilters.venmoType === 'received' && (r.source !== 'venmo' || !r.isCredit)) return false;
+      if (q && !r.business.toLowerCase().includes(q) && !(r.venmoNote || '').toLowerCase().includes(q)) return false;
+      return true;
+    });
+}
+
+async function handleCSVFile(file) {
+  if (!file) return;
+
+  // If the webhook URL is set, pre-fetch sheet history before classifying
+  if (webhookUrl) {
+    setStatus('Fetching your sheet history for smarter categorization…', true);
+    try {
+      const res = await fetch(webhookUrl + '?action=read', { method: 'GET' });
+      const data = await res.json();
+      if (data.success && data.merchantHistory) {
+        sheetHistory = data.merchantHistory;
+      }
+      if (data.success && data.categoryColors) {
+        categoryColors = data.categoryColors;
+      }
+    } catch (_) {
+      // Non-fatal: just proceed without history
+      sheetHistory = {};
+    }
+  }
+
+  setStatus('Reading file…');
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { rows, skipped } = parseCapitalOneCSV(e.target.result);
+    if (!rows.length) {
+      setStatus('No transactions found after filtering.');
+      return;
+    }
+    const newRows = rows.map(r => {
+      const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
+      return { ...r, source: 'capitalOne', category, spending_category, notes: '', isNew, isFromHistory, isDuplicate: false };
+    });
+    // Replace previously-loaded Capital One rows, keep any Venmo rows
+    classifiedRows = [...classifiedRows.filter(r => r.source === 'venmo'), ...newRows].sort((a, b) => {
+      if (a.parsedDate && b.parsedDate) return a.parsedDate - b.parsedDate;
+      if (a.parsedDate) return -1;
+      if (b.parsedDate) return 1;
+      return 0;
+    });
+
+    const autoCount = newRows.filter(r => !r.isNew).length;
+    const historyCount = newRows.filter(r => r.isNew && r.isFromHistory).length;
+    const unknownCount = newRows.filter(r => r.isNew && !r.isFromHistory).length;
+
+    let statusParts = [`${rows.length} Capital One transactions loaded`, `${autoCount} auto-categorized`];
+    if (historyCount > 0) statusParts.push(`${historyCount} suggested from sheet history`);
+    if (unknownCount > 0) statusParts.push(`${unknownCount} need review`);
+    statusParts.push(`${skipped} payments skipped`);
+    setStatus(statusParts.join(' · '));
+
+    renderResults();
+  };
+  reader.readAsText(file);
+}
+
+function parseCapitalOneCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return { rows: [], skipped: 0 };
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase());
+  const txDateIdx = headers.findIndex(h => h.includes('transaction date'));
+  const descIdx = headers.findIndex(h => h.includes('description'));
+  const catIdx = headers.findIndex(h => h === 'category');
+  const debitIdx = headers.findIndex(h => h === 'debit');
+  const creditIdx = headers.findIndex(h => h === 'credit');
+  let skipped = 0;
+  const rows = [];
+  lines.slice(1).forEach(line => {
+    const cols = []; let inQuote = false, cur = '';
+    for (const ch of line) {
+      if (ch === '"') { inQuote = !inQuote; }
+      else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    const desc = descIdx >= 0 ? cols[descIdx] || '' : '';
+    const bankCat = catIdx >= 0 ? cols[catIdx] || '' : '';
+    if (SKIP_KEYWORDS.some(kw => desc.toUpperCase().includes(kw))) { skipped++; return; }
+    if (bankCat === 'Payment/Credit' || bankCat === 'Payment') { skipped++; return; }
+    const dateStr = txDateIdx >= 0 ? cols[txDateIdx] || '' : '';
+    const d = parseDateStr(dateStr);
+    const debit = debitIdx >= 0 ? parseFloat(cols[debitIdx]) || 0 : 0;
+    const credit = creditIdx >= 0 ? parseFloat(cols[creditIdx]) || 0 : 0;
+    const amount = debit > 0 ? debit : credit > 0 ? -credit : 0;
+    if (amount === 0 && !desc) return;
+    rows.push({ date: dateStr, parsedDate: d, month: d ? MONTH_NAMES[d.getMonth()] : 'Unknown', business: desc, bankCategory: bankCat, amount, isCredit: credit > 0 });
+  });
+  return { rows, skipped };
+}
+
+// Resolve color for a category — sheet colors take priority, then hardcoded defaults
+function resolveCategoryColor(category) {
+  return categoryColors[category] || DEFAULT_CATEGORY_COLORS[category] || null;
+}
+function resolveSpendingColor(sc) {
+  return DEFAULT_SPENDING_COLORS[sc] || null;
+}
+
+// Returns inline style to apply directly to the category <select> element
+function getCategorySelectStyle(category) {
+  const c = resolveCategoryColor(category);
+  return c ? `background:${c.bg};color:${c.text || '#1a1a18'};border-color:${c.bg};` : '';
+}
+
+// Returns inline style to apply directly to the spending category <select> element
+function getSpendingSelectStyle(sc) {
+  const c = resolveSpendingColor(sc);
+  return c ? `background:${c.bg};color:${c.text || '#1a1a18'};border-color:${c.bg};` : '';
+}
+
+// Legacy no-ops kept so nothing else breaks
+function getCategoryRowStyle() { return ''; }
+function getCategoryCellStyle() { return ''; }
+function getSpendingCellStyle() { return ''; }
+function getCategoryChipStyle(category) {
+  const c = resolveCategoryColor(category);
+  return c ? `background:${c.bg};color:${c.text||'#1a1a18'};border-color:${c.bg};` : '';
+}
+
+function renderResults() {
+  if (!classifiedRows.length) return;
+
+  const hasVenmo = classifiedRows.some(r => r.source === 'venmo');
+  const hasCapOne = classifiedRows.some(r => r.source !== 'venmo');
+
+  const months = [...new Set(classifiedRows.map(r => r.month))];
+  const total = classifiedRows.filter(r => r.amount > 0 && !r.isDuplicate).reduce((s, r) => s + r.amount, 0);
+  const historyCount = classifiedRows.filter(r => r.isNew && r.isFromHistory && !r.isDuplicate).length;
+  const unknownCount = classifiedRows.filter(r => r.isNew && !r.isFromHistory && !r.isDuplicate).length;
+  const dupCount = classifiedRows.filter(r => r.isDuplicate).length;
+
+  const filteredRows = getFilteredRows();
+
+  // Filter bar — only show when there's something to filter
+  const filterBar = (hasVenmo) ? `
+    <div class="filter-bar">
+      <span class="filter-label">Source</span>
+      <div class="filter-group">
+        <button class="filter-btn ${activeFilters.source==='all'?'active':''}" onclick="setFilter('source','all')">All</button>
+        ${hasCapOne ? `<button class="filter-btn ${activeFilters.source==='capitalOne'?'active':''}" onclick="setFilter('source','capitalOne')">Capital One</button>` : ''}
+        <button class="filter-btn ${activeFilters.source==='venmo'?'venmo-active':''}" onclick="setFilter('source','venmo')">Venmo</button>
+      </div>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Venmo</span>
+      <div class="filter-group">
+        <button class="filter-btn ${activeFilters.venmoType==='all'?'active':''}" onclick="setFilter('venmoType','all')">All</button>
+        <button class="filter-btn ${activeFilters.venmoType==='sent'?'venmo-active':''}" onclick="setFilter('venmoType','sent')">↑ Sent</button>
+        <button class="filter-btn ${activeFilters.venmoType==='received'?'venmo-active':''}" onclick="setFilter('venmoType','received')">↓ Received</button>
+      </div>
+      <div class="filter-sep"></div>
+      <input class="filter-search" placeholder="Search note / merchant…" value="${activeFilters.search}" oninput="setFilter('search',this.value)">
+    </div>` : '';
+
+  document.getElementById('results').innerHTML = `
+    <div class="summary-row">
+      <div class="chip"><strong>${classifiedRows.length}</strong> transactions</div>
+      <div class="chip">$<strong>${total.toFixed(2)}</strong> in expenses</div>
+      ${months.map(m => `<span class="month-chip">${m}</span>`).join('')}
+      ${historyCount > 0 ? `<span class="history-chip">◷ ${historyCount} from sheet history</span>` : ''}
+      ${unknownCount > 0 ? `<span class="new-chip">⚠ ${unknownCount} need review</span>` : ''}
+      ${dupCount > 0 ? `<span class="dup-chip">✓ ${dupCount} duplicates detected</span>` : ''}
+    </div>
+    ${filterBar}
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Date</th><th>Merchant / Note</th><th>Type</th><th>Amount</th>
+        <th style="min-width:140px">Category</th>
+        <th style="min-width:150px">Spending category</th>
+        <th style="min-width:140px">Notes</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${filteredRows.map((r) => {
+          const i = r._idx;
+          const rowClass = [
+            r.source === 'venmo' ? 'is-venmo' : '',
+            r.isDuplicate ? 'is-dup' : '',
+            r.isNew && r.isFromHistory && !r.isDuplicate ? 'is-history' : '',
+            r.isNew && !r.isFromHistory && !r.isDuplicate ? 'is-new' : '',
+            r.isCredit ? 'is-credit' : ''
+          ].filter(Boolean).join(' ');
+
+          let badge = '';
+          if (r.isDuplicate) badge = '<br><span class="dup-badge">duplicate — will skip</span>';
+          else if (r.source === 'venmo') badge = '<br><span class="venmo-badge">Venmo</span>';
+          else if (r.isFromHistory) badge = '<br><span class="history-badge">from history</span>';
+          else if (r.isNew) badge = '<br><span class="new-badge">review</span>';
+
+          const catSelectStyle = !r.isDuplicate ? getCategorySelectStyle(r.category) : '';
+          const spendSelectStyle = !r.isDuplicate ? getSpendingSelectStyle(r.spending_category) : '';
+
+          // Venmo rows show person under the note
+          const personLine = r.venmoPerson ? `<div class="venmo-person">${r.venmoPerson}</div>` : '';
+
+          return `
+          <tr class="${rowClass}">
+            <td class="date-cell">${r.date}</td>
+            <td class="merchant-cell" title="${r.business}">
+              ${r.business}${personLine}${badge}
+            </td>
+            <td style="font-size:12px;color:var(--text-muted)">${r.bankCategory || '—'}</td>
+            <td class="amount-cell ${r.isCredit ? 'amount-neg' : ''}">${r.isCredit ? '-' : ''}$${Math.abs(r.amount).toFixed(2)}</td>
+            <td>
+              <select id="cat-sel-${i}" style="${catSelectStyle}" onchange="updateRow(${i},'category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${CATEGORIES.map(c => `<option ${c===r.category?'selected':''}>${c}</option>`).join('')}</select>
+            </td>
+            <td><select id="spend-sel-${i}" style="${spendSelectStyle}" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></td>
+            <td><input type="text" value="${r.notes||''}" oninput="updateRow(${i},'notes',this.value)" placeholder="—" ${r.isDuplicate ? 'disabled' : ''}></td>
+            <td>${(r.isNew || r.isFromHistory) && !r.isDuplicate ? `<button class="btn-ghost" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="saveRule(${i})">Save rule</button>` : ''}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+    ${filteredRows.length < classifiedRows.length ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Showing ${filteredRows.length} of ${classifiedRows.length} transactions · <a href="#" style="color:var(--accent)" onclick="setFilter('source','all');setFilter('venmoType','all');setFilter('search','');return false">Clear filters</a></p>` : ''}
+    <div class="action-row">
+      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn-primary" id="write-btn" onclick="writeToSheet()">Check duplicates & write →</button>
+    </div>
+    <div id="write-result"></div>`;
+}
+
+function updateRow(i, field, val) {
+  classifiedRows[i][field] = val;
+  if (field === 'category') {
+    const sel = document.getElementById(`cat-sel-${i}`);
+    if (sel && !classifiedRows[i].isDuplicate) sel.style.cssText = getCategorySelectStyle(val);
+  }
+  if (field === 'spending_category') {
+    const sel = document.getElementById(`spend-sel-${i}`);
+    if (sel && !classifiedRows[i].isDuplicate) sel.style.cssText = getSpendingSelectStyle(val);
+  }
+}
+
+function saveRule(i) {
+  const row = classifiedRows[i];
+  const key = row.business.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').trim().substring(0, 22).trim();
+  userRules[key] = { category: row.category, spending_category: row.spending_category };
+  localStorage.setItem('budget_rules', JSON.stringify(userRules));
+  classifiedRows[i].isNew = false;
+  classifiedRows[i].isFromHistory = false;
+  renderResults();
+  renderRulesSection();
+}
+
+function deleteRule(key) {
+  delete userRules[key];
+  localStorage.setItem('budget_rules', JSON.stringify(userRules));
+  renderRulesSection();
+}
+
+function renderRulesSection() {
+  const keys = Object.keys(userRules);
+  const section = document.getElementById('rules-section');
+  section.style.display = keys.length ? 'block' : 'none';
+  document.getElementById('rules-count').textContent = keys.length;
+  document.getElementById('rules-grid').innerHTML = keys.map(key => {
+    const r = userRules[key];
+    return `<div class="rule-row">
+      <span class="rule-merchant" title="${key}">${key}</span>
+      <span class="rule-arrow">→</span>
+      <span class="rule-cat">${r.category}</span>
+      <button class="rule-delete" onclick="deleteRule('${key.replace(/'/g,"\\'")}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+function clearAll() {
+  classifiedRows = [];
+  activeFilters = { source: 'all', venmoType: 'all', search: '' };
+  document.getElementById('results').innerHTML = '';
+  setStatus('');
+  document.getElementById('csv-file').value = '';
+  document.getElementById('venmo-file').value = '';
+}
+
+function showWriteResult(html) {
+  // Always query fresh — renderResults() may have replaced the DOM
+  const el = document.getElementById('write-result');
+  if (el) el.innerHTML = html;
+}
+
+function setWriteBtn(disabled, text) {
+  const btn = document.getElementById('write-btn');
+  if (btn) { btn.disabled = disabled; btn.textContent = text; }
+}
+
+async function writeToSheet() {
+  if (!webhookUrl) { alert('Add your Apps Script Web App URL in the setup section first.'); return; }
+  console.log('[budget] writeToSheet started');
+  console.log('[budget] webhook URL:', webhookUrl);
+  console.log('[budget] classifiedRows count:', classifiedRows.length);
+  setWriteBtn(true, 'Checking duplicates…');
+
+  try {
+    // Step 1: duplicate check GET
+    console.log('[budget] Step 1: fetching existing keys from sheet…');
+    const checkRes = await fetch(webhookUrl + '?action=read', { method: 'GET' });
+    console.log('[budget] Step 1 response status:', checkRes.status, checkRes.statusText);
+    const checkData = await checkRes.json();
+    console.log('[budget] Step 1 parsed response:', checkData);
+
+    if (checkData.success && checkData.existingKeys) {
+      const existingKeys = new Set(checkData.existingKeys);
+      console.log('[budget] existing keys in sheet:', existingKeys.size);
+      classifiedRows.forEach(r => {
+        r.isDuplicate = existingKeys.has(dupKey(r));
+      });
+      const dupCount = classifiedRows.filter(r => r.isDuplicate).length;
+      console.log('[budget] duplicates found:', dupCount);
+      if (checkData.merchantHistory) sheetHistory = checkData.merchantHistory;
+      if (checkData.categoryColors) categoryColors = checkData.categoryColors;
+      renderResults();
+    } else {
+      console.warn('[budget] Step 1: unexpected response shape — success or existingKeys missing', checkData);
+    }
+
+    setWriteBtn(true, 'Writing…');
+
+    const toWrite = classifiedRows.filter(r => !r.isDuplicate);
+    console.log('[budget] Step 2: rows to write:', toWrite.length);
+
+    if (!toWrite.length) {
+      showWriteResult(`<div class="write-result success">All transactions already exist in your sheet — nothing to write.</div>`);
+      setWriteBtn(false, 'Check duplicates & write →');
+      return;
+    }
+
+    // Omit Content-Type header so the browser sends a simple request,
+    // avoiding the CORS preflight that Apps Script doesn't handle
+    console.log('[budget] Step 2: sending POST to Apps Script…');
+    console.log('[budget] payload preview:', JSON.stringify({ transactions: toWrite }).slice(0, 300));
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      body: JSON.stringify({ transactions: toWrite })
+    });
+    console.log('[budget] Step 2 response status:', res.status, res.statusText);
+    const data = await res.json();
+    console.log('[budget] Step 2 parsed response:', data);
+
+    if (data.success) {
+      showWriteResult(`<div class="write-result success">✓ ${toWrite.length} transactions written · ${classifiedRows.length - toWrite.length} duplicates skipped<br><small>${data.results.join(' · ')}</small></div>`);
+    } else {
+      showWriteResult(`<div class="write-result error">Write failed: ${data.error}</div>`);
+    }
+  } catch (err) {
+    console.error('[budget] caught error:', err);
+    showWriteResult(`<div class="write-result error">Could not reach your Apps Script. Make sure it's deployed as a web app with "Anyone" access.<br><small>${err.message}</small></div>`);
+  }
+  setWriteBtn(false, 'Check duplicates & write →');
+  console.log('[budget] writeToSheet done');
+}
+</script>
+</body>
+</html>
