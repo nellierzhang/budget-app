@@ -147,7 +147,7 @@
 </div>
 
 <script>
-const CATEGORIES = ['Housing','Transportation','Ride Share','Grocery','Health','Workout','Dining Out','Activity','Gift','Shopping','Bike','Travel','Essentials','Work Lunch','Work Coffee','Pre-Tax Health Insurance'];
+const CATEGORIES = ['Housing','Transportation','Ride Share','Grocery','Health','Workout','Dining Out','Activity','Gift','Shopping','Travel','Essentials','Work Lunch','Work Coffee','Pre-Tax Health Insurance'];
 const SPENDING_CATS = ['Necessary Costs','Fun Spending','From Savings','Investments','Saving Goals','Post Tax Income','Pre-Tax','Bonus!'];
 
 // Default colors matching the Google Sheet data validation palette.
@@ -167,7 +167,6 @@ const DEFAULT_CATEGORY_COLORS = {
   'Pre-Tax Health Insurance': { bg: '#9fc5e8', text: '#1a1a18' },
   'Transportation':           { bg: '#4a86e8', text: '#ffffff' },
   'Ride Share':               { bg: '#6d9eeb', text: '#ffffff' },
-  'Bike':                     { bg: '#76a5af', text: '#ffffff' },
 };
 const DEFAULT_SPENDING_COLORS = {
   'Necessary Costs':  { bg: '#351c75', text: '#ffffff' },
@@ -213,7 +212,7 @@ const BUILTIN_RULES = {
   'OPENAI':                { category: 'Essentials',     spending_category: 'Necessary Costs' },
   'NYTIMES':               { category: 'Essentials',     spending_category: 'Necessary Costs' },
   'PAYPAL *OURARING':      { category: 'Essentials',     spending_category: 'Necessary Costs' },
-  'CITIBIK':               { category: 'Bike',           spending_category: 'Fun Spending' },
+  'CITIBIK':               { category: 'Transportation', spending_category: 'Necessary Costs' },
   'LYFT':                  { category: 'Ride Share',     spending_category: 'Fun Spending' },
   'UBER *TRIP':            { category: 'Ride Share',     spending_category: 'Fun Spending' },
   'UBER *EATS':            { category: 'Dining Out',     spending_category: 'Fun Spending' },
@@ -287,7 +286,7 @@ function parseDateStr(val) {
 function matchMerchantRule(merchant) {
   const m = merchant.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g, ' ').trim();
   for (const [key, val] of Object.entries(userRules)) {
-    if (m.includes(key.toUpperCase())) return val;
+    if (m.includes(key.toUpperCase()) || key.toUpperCase().includes(m)) return val;
   }
   for (const [key, val] of Object.entries(BUILTIN_RULES)) {
     if (m.includes(key.toUpperCase())) return val;
@@ -322,7 +321,7 @@ function classifyRow(row) {
       return { category: 'Ride Share', spending_category: 'Fun Spending', isNew: false, isFromHistory: false };
     }
     if (BIKE_KEYWORDS.some(kw => m.includes(kw))) {
-      return { category: 'Bike', spending_category: 'Fun Spending', isNew: false, isFromHistory: false };
+      return { category: 'Transportation', spending_category: 'Necessary Costs', isNew: false, isFromHistory: false };
     }
     return { category: 'Transportation', spending_category: 'Necessary Costs', isNew: false, isFromHistory: false };
   }
