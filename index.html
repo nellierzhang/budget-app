@@ -88,7 +88,7 @@
   tr.is-venmo { background: #faf5ff; }
   tr.is-venmo.is-credit td { color: var(--text-muted); }
   .venmo-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #f5f3ff; color: #5b21b6; border: 0.5px solid #c4b5fd; white-space: nowrap; }
-  .venmo-person { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
   .filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; padding: 8px 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); }
   .filter-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
   .filter-group { display: flex; gap: 4px; align-items: center; }
@@ -692,8 +692,7 @@ function renderResults() {
           const catSelectStyle = !r.isDuplicate ? getCategorySelectStyle(r.category) : '';
           const spendSelectStyle = !r.isDuplicate ? getSpendingSelectStyle(r.spending_category) : '';
 
-          // Venmo rows show the note as a subtitle under the business name
-          const personLine = r.venmoNote ? `<div class="venmo-person">${r.venmoNote}</div>` : '';
+          const personLine = '';
 
           return `
           <tr class="${rowClass}">
