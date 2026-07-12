@@ -460,8 +460,11 @@ function parseVenmoCSV(text) {
     const from = get(fromIdx);
     const to   = get(toIdx);
 
-    // "Venmo [From] to [To]" as the sheet business name
-    const business = `Venmo ${from} to ${to}`;
+    // For Charges, Venmo puts the requester in From and the payer in To —
+    // swap so the business string always reads "Venmo [payer] to [payee]"
+    const bizFrom = type === 'Charge' ? to : from;
+    const bizTo   = type === 'Charge' ? from : to;
+    const business = `Venmo ${bizFrom} to ${bizTo}`;
 
     rows.push({
       date: dateStr,
@@ -737,6 +740,18 @@ function saveRule(i) {
   localStorage.setItem('budget_rules', JSON.stringify(userRules));
   classifiedRows[i].isNew = false;
   classifiedRows[i].isFromHistory = false;
+
+  // Apply the new rule to all subsequent rows that match the same merchant
+  for (let j = i + 1; j < classifiedRows.length; j++) {
+    const r = classifiedRows[j];
+    if (r.isDuplicate) continue;
+    const m = r.business.toUpperCase().replace(/\s+/g, ' ').trim();
+    if (m.includes(key)) {
+      r.category = row.category;
+      r.spending_category = row.spending_category;
+    }
+  }
+
   renderResults();
   renderRulesSection();
 }
