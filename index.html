@@ -365,7 +365,7 @@ async function handleVenmoFile(file) {
     }
     const newRows = rows.map(r => {
       const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
-      return { ...r, category, spending_category, notes: '', isNew, isFromHistory, isDuplicate: false };
+      return { ...r, category, spending_category, notes: r.venmoNote || '', isNew, isFromHistory, isDuplicate: false };
     });
     // Replace any previously-loaded Venmo rows, keep Capital One rows
     classifiedRows = [...classifiedRows.filter(r => r.source !== 'venmo'), ...newRows]
@@ -456,14 +456,12 @@ function parseVenmoCSV(text) {
       ? `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`
       : dateRaw;
 
-    const note   = get(noteIdx);
-    const from   = get(fromIdx);
-    const to     = get(toIdx);
-    const person = isReceived ? from : to;
+    const note = get(noteIdx);
+    const from = get(fromIdx);
+    const to   = get(toIdx);
 
-    // Build a descriptive "business" string for the sheet
-    let business = note || 'Venmo';
-    if (person) business += ` (${person})`;
+    // "Venmo [From] to [To]" as the sheet business name
+    const business = `Venmo ${from} to ${to}`;
 
     rows.push({
       date: dateStr,
@@ -471,7 +469,8 @@ function parseVenmoCSV(text) {
       month: d ? MONTH_NAMES[d.getMonth()] : 'Unknown',
       business,
       venmoNote: note,
-      venmoPerson: person,
+      venmoFrom: from,
+      venmoTo: to,
       bankCategory: isReceived ? '↓ Received' : '↑ Sent',
       amount: isReceived ? -amount : amount, // positive = expense
       isCredit: isReceived,
@@ -690,8 +689,8 @@ function renderResults() {
           const catSelectStyle = !r.isDuplicate ? getCategorySelectStyle(r.category) : '';
           const spendSelectStyle = !r.isDuplicate ? getSpendingSelectStyle(r.spending_category) : '';
 
-          // Venmo rows show person under the note
-          const personLine = r.venmoPerson ? `<div class="venmo-person">${r.venmoPerson}</div>` : '';
+          // Venmo rows show the note as a subtitle under the business name
+          const personLine = r.venmoNote ? `<div class="venmo-person">${r.venmoNote}</div>` : '';
 
           return `
           <tr class="${rowClass}">
