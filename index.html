@@ -45,14 +45,23 @@
   .table-wrap { overflow-x: auto; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  th.pill-th { background: #2F5D4F; color: #ffffff; font-weight: 700; font-size: 12px; }
+  th.pill-th .th-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.45); margin-right: 6px; vertical-align: middle; position: relative; top: -1px; }
   td { padding: 7px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #f5f5f4; }
   tr.is-new { background: #fffdf0; }
   tr.is-history { background: #f5f8ff; }
   tr.is-dup { background: #f8fdf8; opacity: 0.6; }
   tr.is-credit td { color: var(--text-muted); }
   td select, td input[type=text] { font-size: 12px; padding: 4px 6px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
   td select:focus, td input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .pill-cell { position: relative; display: inline-flex; max-width: 100%; }
+  .pill-cell .pill-select { width: auto; max-width: 100%; padding: 4px 30px 4px 12px; border: none; border-radius: 999px; background: var(--pill); color: var(--pilltext); font-weight: 600; -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; text-overflow: ellipsis; }
+  .pill-cell .pill-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pill-cell::after { content: ""; position: absolute; top: 2px; right: 2px; bottom: 2px; width: 22px; border-radius: 0 999px 999px 0; background: color-mix(in srgb, var(--pill) 78%, #000); pointer-events: none; }
+  .pill-cell::before { content: ""; position: absolute; top: 50%; right: 8px; width: 0; height: 0; margin-top: -2px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--pilltext); pointer-events: none; z-index: 1; }
+  .pill-cell .pill-select:disabled { cursor: default; }
   .date-cell { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
   .merchant-cell { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .amount-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -150,33 +159,33 @@
 const CATEGORIES = ['Housing','Transportation','Ride Share','Grocery','Health','Workout','Dining Out','Activity','Gift','Shopping','Travel','Essentials','Work Lunch','Work Coffee','Pre-Tax Health Insurance'];
 const SPENDING_CATS = ['Necessary Costs','Fun Spending','From Savings','Investments','Saving Goals','Post Tax Income','Pre-Tax','Bonus!'];
 
-// Default colors matching the Google Sheet data validation palette.
+// Default colors — bold, saturated backgrounds; text auto-computed by getContrastText().
 const DEFAULT_CATEGORY_COLORS = {
-  'Travel':                   { bg: '#1155cc', text: '#ffffff' },
-  'Grocery':                  { bg: '#b6d7a8', text: '#1a1a18' },
-  'Dining Out':               { bg: '#38761d', text: '#ffffff' },
-  'Work Lunch':               { bg: '#134f5c', text: '#ffffff' },
-  'Work Coffee':              { bg: '#1c4b5e', text: '#ffffff' },
-  'Shopping':                 { bg: '#7030a0', text: '#ffffff' },
-  'Gift':                     { bg: '#9900ff', text: '#ffffff' },
-  'Activity':                 { bg: '#c8b4e9', text: '#1a1a18' },
-  'Housing':                  { bg: '#b45309', text: '#ffffff' },
-  'Essentials':               { bg: '#783f04', text: '#ffffff' },
-  'Health':                   { bg: '#ea9999', text: '#1a1a18' },
-  'Workout':                  { bg: '#cc0000', text: '#ffffff' },
-  'Pre-Tax Health Insurance': { bg: '#9fc5e8', text: '#1a1a18' },
-  'Transportation':           { bg: '#4a86e8', text: '#ffffff' },
-  'Ride Share':               { bg: '#6d9eeb', text: '#ffffff' },
+  'Housing':                  { bg: '#753800', text: '#ffc8aa' },
+  'Essentials':               { bg: '#ffc8aa', text: '#753800' },
+  'Dining Out':               { bg: '#13734b', text: '#d4edbb' },
+  'Work Lunch':               { bg: '#215a6c', text: '#c6dce1' },
+  'Work Coffee':              { bg: '#c6dce1', text: '#215a6c' },
+  'Travel':                   { bg: '#0d52a8', text: '#bee0f6'},
+  'Workout':                  { bg: '#9e0101', text: '#ffcfc8' },
+  'Transportation':           { bg: '#bee0f6', text: '#0d52a8' },
+  'Ride Share':               { bg: '#5A9EC9' },
+  'Grocery':                  { bg: '#d4edbb', text: '#13734b' },
+  'Health':                   { bg: '#4A7A8C' },
+  'Shopping':                 { bg: '#6B3FA0' },
+  'Gift':                     { bg: '#8B008B' },
+  'Activity':                 { bg: '#5C4A8F' },
+  'Pre-Tax Health Insurance': { bg: '#3B7BBF' },
 };
 const DEFAULT_SPENDING_COLORS = {
-  'Necessary Costs':  { bg: '#351c75', text: '#ffffff' },
-  'Fun Spending':     { bg: '#d0aef0', text: '#1a1a18' },
-  'Investments':      { bg: '#b6d7a8', text: '#1a1a18' },
-  'Saving Goals':     { bg: '#9fc5e8', text: '#1a1a18' },
-  'Post Tax Income':  { bg: '#38761d', text: '#ffffff' },
-  'Pre-Tax':          { bg: '#d9ead3', text: '#1a1a18' },
-  'From Savings':     { bg: '#9fc5e8', text: '#1a1a18' },
-  'Bonus!':           { bg: '#ffe599', text: '#1a1a18' },
+  'Necessary Costs':  { bg: '#4B2E6E', text: '#e5cff3' },
+  'Fun Spending':     { bg: '#D8C7EC' },
+  'Investments':      { bg: '#C5E8B7' },
+  'Saving Goals':     { bg: '#9FC5E8' },
+  'Post Tax Income':  { bg: '#1F5138' },
+  'Pre-Tax':          { bg: '#D9EAD3' },
+  'From Savings':     { bg: '#9FC5E8' },
+  'Bonus!':           { bg: '#FFE599' },
 };
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const SKIP_KEYWORDS = ['CAPITAL ONE MOBILE PYMT','CAPITAL ONE ONLINE PYMT','AUTOPAY','PAYMENT THANK YOU','MOBILE PYMT','ONLINE PYMT'];
@@ -591,24 +600,51 @@ function parseCapitalOneCSV(text) {
   return { rows, skipped };
 }
 
-// Resolve color for a category — sheet colors take priority, then hardcoded defaults
+// Returns white or near-black based on WCAG relative luminance of the hex background
+function getContrastText(hex) {
+  const r = parseInt(hex.slice(1,3),16)/255;
+  const g = parseInt(hex.slice(3,5),16)/255;
+  const b = parseInt(hex.slice(5,7),16)/255;
+  const lin = c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4);
+  const L = 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
+  return L > 0.179 ? '#1a1a18' : '#ffffff';
+}
+
+// Normalized key so trailing whitespace / casing differences (e.g. sheet-history
+// values) can't cause a silent fallback to an unstyled pill.
+function normColorKey(s) { return String(s || '').trim().toLowerCase(); }
+function lookupColor(map, key) {
+  if (!map) return null;
+  if (map[key]) return map[key];
+  const nk = normColorKey(key);
+  for (const k in map) { if (normColorKey(k) === nk) return map[k]; }
+  return null;
+}
+
+// Neutral fallback so any non-empty value always renders a colored pill,
+// even a custom category not present in the sheet or DEFAULT_* maps.
+const FALLBACK_PILL_COLOR = { bg: '#6b7280' };
+
+// Resolve color for a category — sheet colors take priority, then hardcoded defaults, then neutral fallback
 function resolveCategoryColor(category) {
-  return categoryColors[category] || DEFAULT_CATEGORY_COLORS[category] || null;
+  if (!String(category || '').trim()) return null;
+  return lookupColor(categoryColors, category) || lookupColor(DEFAULT_CATEGORY_COLORS, category) || FALLBACK_PILL_COLOR;
 }
 function resolveSpendingColor(sc) {
-  return DEFAULT_SPENDING_COLORS[sc] || null;
+  if (!String(sc || '').trim()) return null;
+  return lookupColor(DEFAULT_SPENDING_COLORS, sc) || FALLBACK_PILL_COLOR;
 }
 
-// Returns inline style to apply directly to the category <select> element
+// Returns the CSS custom properties for the pill wrapper (blank only when value is empty)
 function getCategorySelectStyle(category) {
   const c = resolveCategoryColor(category);
-  return c ? `background:${c.bg};color:${c.text || '#1a1a18'};border-color:${c.bg};` : '';
+  return c ? `--pill:${c.bg};--pilltext:${getContrastText(c.bg)};` : '';
 }
 
-// Returns inline style to apply directly to the spending category <select> element
+// Returns the CSS custom properties for the spending pill wrapper (blank only when value is empty)
 function getSpendingSelectStyle(sc) {
   const c = resolveSpendingColor(sc);
-  return c ? `background:${c.bg};color:${c.text || '#1a1a18'};border-color:${c.bg};` : '';
+  return c ? `--pill:${c.bg};--pilltext:${getContrastText(c.bg)};` : '';
 }
 
 // Legacy no-ops kept so nothing else breaks
@@ -667,8 +703,8 @@ function renderResults() {
     <div class="table-wrap"><table>
       <thead><tr>
         <th>Date</th><th>Merchant / Note</th><th>Type</th><th>Amount</th>
-        <th style="min-width:140px">Category</th>
-        <th style="min-width:150px">Spending category</th>
+        <th>Category</th>
+        <th>Spending category</th>
         <th style="min-width:140px">Notes</th><th></th>
       </tr></thead>
       <tbody>
@@ -688,8 +724,8 @@ function renderResults() {
           else if (r.isFromHistory) badge = '<br><span class="history-badge">from history</span>';
           else if (r.isNew) badge = '<br><span class="new-badge">review</span>';
 
-          const catSelectStyle = !r.isDuplicate ? getCategorySelectStyle(r.category) : '';
-          const spendSelectStyle = !r.isDuplicate ? getSpendingSelectStyle(r.spending_category) : '';
+          const catPillVars = getCategorySelectStyle(r.category);
+          const spendPillVars = getSpendingSelectStyle(r.spending_category);
 
           const personLine = '';
 
@@ -702,9 +738,13 @@ function renderResults() {
             <td style="font-size:12px;color:var(--text-muted)">${r.bankCategory || '—'}</td>
             <td class="amount-cell ${r.isCredit ? 'amount-neg' : ''}">${r.isCredit ? '-' : ''}$${Math.abs(r.amount).toFixed(2)}</td>
             <td>
-              <select id="cat-sel-${i}" style="${catSelectStyle}" onchange="updateRow(${i},'category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${CATEGORIES.map(c => `<option ${c===r.category?'selected':''}>${c}</option>`).join('')}</select>
+              ${catPillVars
+                ? `<span class="pill-cell" id="cat-pill-${i}" style="${catPillVars}"><select id="cat-sel-${i}" class="pill-select" onchange="updateRow(${i},'category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${CATEGORIES.map(c => `<option ${c===r.category?'selected':''}>${c}</option>`).join('')}</select></span>`
+                : `<span id="cat-pill-${i}"><select id="cat-sel-${i}" onchange="updateRow(${i},'category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${CATEGORIES.map(c => `<option ${c===r.category?'selected':''}>${c}</option>`).join('')}</select></span>`}
             </td>
-            <td><select id="spend-sel-${i}" style="${spendSelectStyle}" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></td>
+            <td>${spendPillVars
+                ? `<span class="pill-cell" id="spend-pill-${i}" style="${spendPillVars}"><select id="spend-sel-${i}" class="pill-select" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></span>`
+                : `<span id="spend-pill-${i}"><select id="spend-sel-${i}" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></span>`}</td>
             <td><input type="text" value="${r.notes||''}" oninput="updateRow(${i},'notes',this.value)" placeholder="—" ${r.isDuplicate ? 'disabled' : ''}></td>
             <td>${(r.isNew || r.isFromHistory) && !r.isDuplicate ? `<button class="btn-ghost" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="saveRule(${i})">Save rule</button>` : ''}</td>
           </tr>`;
@@ -719,15 +759,26 @@ function renderResults() {
     <div id="write-result"></div>`;
 }
 
+function applyPill(wrap, sel, vars) {
+  if (!wrap || !sel) return;
+  if (vars) {
+    wrap.className = 'pill-cell';
+    wrap.style.cssText = vars;
+    sel.classList.add('pill-select');
+  } else {
+    wrap.className = '';
+    wrap.style.cssText = '';
+    sel.classList.remove('pill-select');
+  }
+}
+
 function updateRow(i, field, val) {
   classifiedRows[i][field] = val;
   if (field === 'category') {
-    const sel = document.getElementById(`cat-sel-${i}`);
-    if (sel && !classifiedRows[i].isDuplicate) sel.style.cssText = getCategorySelectStyle(val);
+    applyPill(document.getElementById(`cat-pill-${i}`), document.getElementById(`cat-sel-${i}`), getCategorySelectStyle(val));
   }
   if (field === 'spending_category') {
-    const sel = document.getElementById(`spend-sel-${i}`);
-    if (sel && !classifiedRows[i].isDuplicate) sel.style.cssText = getSpendingSelectStyle(val);
+    applyPill(document.getElementById(`spend-pill-${i}`), document.getElementById(`spend-sel-${i}`), getSpendingSelectStyle(val));
   }
 }
 
