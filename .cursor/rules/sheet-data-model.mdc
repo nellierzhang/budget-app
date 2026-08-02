@@ -1,0 +1,67 @@
+---
+description: Google Sheets budget tracker data model — schema, column layout, and transaction object shape
+globs: "**/*.gs"
+alwaysApply: true
+---
+
+# Budget Tracker — Sheet Data Model
+
+## Sheet Layout
+
+The spreadsheet has **12 tabs**, one per month: `January` through `December`.
+
+- **Row 1**: header row (skip on read/write)
+- **Row 2+**: transaction data
+
+## Column Schema (1-indexed)
+
+| Col | Letter | Field              | Type                          | Notes                                      |
+|-----|--------|--------------------|-------------------------------|--------------------------------------------|
+| 1   | A      | `date`             | Date or M/D/YY string         | Used in duplicate-detection key            |
+| 2   | B      | `business`         | string                        | Merchant name; normalized `.toUpperCase().trim()` for keys |
+| 3   | C      | `amount`           | number (float)                | Stored as-is; absolute value used in keys  |
+| 4   | D      | `category`         | string                        | e.g. `"Groceries"`, `"Dining"`             |
+| 5   | E      | `spending_category`| string                        | Broader bucket, e.g. `"Needs"`, `"Wants"` |
+| 6   | F      | `notes`            | string (optional)             | Free-text; may be empty                    |
+
+## Transaction Object (POST payload)
+
+```js
+{
+  month: "January",          // routes to the correct sheet tab
+  date: "7/4/26",            // written to col A
+  business: "Whole Foods",   // written to col B
+  amount: 42.50,             // written to col C
+  category: "Groceries",     // written to col D
+  spending_category: "Needs",// written to col E
+  notes: ""                  // written to col F (optional)
+}
+```
+
+## Duplicate-Detection Key
+
+```js
+const key = `${dateStr}|${business.toUpperCase().trim()}|${Math.abs(amount).toFixed(2)}`;
+// e.g. "7/4/26|WHOLE FOODS|42.50"
+```
+
+## Row Coloring Rules
+
+- **Amazon rows** (`business` contains `"AMAZON"`): bg `#fff2cc`, font `#7d5a00`
+- **All other rows**: inherit the existing bg/font color already used for that `category` in the sheet (looked up from `buildCategoryColorMap`)
+- Category colors are keyed off **col D** (index 3); non-white, non-black backgrounds only
+
+## GET Response Shape
+
+```js
+{
+  success: true,
+  existingKeys: ["7/4/26|WHOLE FOODS|42.50", ...],
+  merchantHistory: {
+    "WHOLE FOODS": { category: "Groceries", spending_category: "Needs" }
+  },
+  categoryColors: {
+    "Groceries": { bg: "#d9ead3", text: null }
+  }
+}
+```

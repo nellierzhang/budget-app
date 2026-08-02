@@ -1,0 +1,45 @@
+---
+description: Canonical category/spending-category lists and pill color resolution in index.html
+globs: index.html
+alwaysApply: false
+---
+
+# Categories & Spending Categories
+
+## Valid values
+
+```js
+CATEGORIES = [
+  'Housing','Transportation','Ride Share','Grocery','Health','Workout',
+  'Dining Out','Activity','Gift','Shopping','Travel','Essentials',
+  'Work Lunch','Work Coffee','Pre-Tax Health Insurance'
+]
+
+SPENDING_CATS = [
+  'Necessary Costs','Fun Spending','From Savings','Investments',
+  'Saving Goals','Post Tax Income','Pre-Tax','Bonus!'
+]
+```
+
+Always use these exact strings — casing matters for color lookups and sheet writes.
+
+## Pill color resolution
+
+Category pills use CSS custom properties `--pill` (background) and `--pilltext` (foreground), computed by `getContrastText(hex)` for WCAG contrast.
+
+Resolution order for **category**:
+1. `categoryColors` — live colors fetched from the Google Sheet
+2. `DEFAULT_CATEGORY_COLORS` — hardcoded defaults in `index.html`
+3. `FALLBACK_PILL_COLOR` — `{ bg: '#6b7280' }` (neutral gray)
+
+Resolution order for **spending category**:
+1. `DEFAULT_SPENDING_COLORS` — hardcoded (sheet colors are not fetched for spending cats)
+2. `FALLBACK_PILL_COLOR`
+
+## Applying pills in the DOM
+
+Use `getCategorySelectStyle(category)` / `getSpendingSelectStyle(sc)` to get the inline style string, then apply with `applyPill(wrapEl, selectEl, vars)`. Never set pill CSS directly — always go through these helpers so the fallback and contrast logic stays consistent.
+
+## Amazon row coloring (sheet-side)
+
+In `Code.gs`, Amazon rows (`business` contains `'AMAZON'`) always get `bg #fff2cc / font #7d5a00` regardless of category. All other rows inherit the category color from `buildCategoryColorMap`. This is separate from the front-end pill colors.

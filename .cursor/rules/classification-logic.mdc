@@ -1,0 +1,46 @@
+---
+description: Transaction classification priority and merchant-rule conventions in index.html
+globs: index.html
+alwaysApply: false
+---
+
+# Transaction Classification
+
+`classifyRow(row)` resolves category + spending_category via a strict 4-step priority — never skip or reorder steps:
+
+1. **User rules** (`userRules`, localStorage) — checked first via `matchMerchantRule`
+2. **Built-in rules** (`BUILTIN_RULES`, hardcoded) — also checked inside `matchMerchantRule`, after user rules
+3. **Sheet history** (`sheetHistory`, fetched from Google Sheet) — matched via `matchSheetHistory`; sets `isFromHistory: true` so the row gets flagged for review
+4. **Bank category map** (`BANK_CAT_MAP`) — falls back to Capital One's own category field; Transportation is sub-classified by merchant name using `RIDE_SHARE_KEYWORDS` / `BIKE_KEYWORDS`
+
+Unknown merchants fall through to `{ category: 'Shopping', spending_category: 'Fun Spending', isNew: true }`.
+
+## Merchant matching
+
+Both `matchMerchantRule` and `matchSheetHistory` use **substring matching** (not exact equality):
+
+```js
+// user/built-in rules
+m.includes(key.toUpperCase()) || key.toUpperCase().includes(m)
+
+// sheet history
+m.includes(key) || key.includes(m)
+```
+
+Merchant keys are normalized: `.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g,' ').trim()`
+
+## Adding a new built-in rule
+
+Add to `BUILTIN_RULES` with an uppercased, punctuation-stripped prefix of the merchant name (≤22 chars):
+
+```js
+'TRADER JOE': { category: 'Grocery', spending_category: 'Necessary Costs' },
+```
+
+## Skipped transactions
+
+Capital One rows are dropped before classification if:
+- Description matches any `SKIP_KEYWORDS` (payments, autopay)
+- Bank category is `'Payment/Credit'` or `'Payment'`
+
+Venmo rows are dropped if status is not `'complete'` or type matches `standard transfer|instant transfer|bank funded`.
