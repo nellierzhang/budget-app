@@ -28,9 +28,9 @@ Always use these exact strings — casing matters for color lookups and sheet wr
 Category pills use CSS custom properties `--pill` (background) and `--pilltext` (foreground), computed by `getContrastText(hex)` for WCAG contrast.
 
 Resolution order for **category**:
-1. `categoryColors` — live colors fetched from the Google Sheet
-2. `DEFAULT_CATEGORY_COLORS` — hardcoded defaults in `index.html`
-3. `FALLBACK_PILL_COLOR` — `{ bg: '#6b7280' }` (neutral gray)
+1. `CATEGORY_COLORS` — canonical static map defined inline near the top of `index.html`'s `<script>` block (single source of truth; always wins for known categories)
+2. `categoryColors` — live colors fetched from the Google Sheet (fallback for categories not in the static map)
+3. `FALLBACK_PILL_COLOR` — `{ bg: '#6b7280' }` (neutral gray, defined alongside `CATEGORY_COLORS`)
 
 Resolution order for **spending category**:
 1. `DEFAULT_SPENDING_COLORS` — hardcoded (sheet colors are not fetched for spending cats)

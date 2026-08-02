@@ -156,27 +156,39 @@
 </div>
 
 <script>
+// ─── Category pill colors — single source of truth ───────────────────────────
+// Edit the `bg` hex values here to change pill colors.
+// Text color is auto-computed for WCAG contrast — no need to set it manually.
+//
+// Resolution order (resolveCategoryColor):
+//   1. CATEGORY_COLORS — below (authoritative for all known categories)
+//   2. categoryColors  — live colors read from the Google Sheet (fallback for unknown categories)
+//   3. FALLBACK_PILL_COLOR — neutral gray for anything else
+const CATEGORY_COLORS = {
+  // ── Standardized palette ──────────────────────────────────────────────────
+  'Grocery':                  { bg: '#B6D7A8' },   // light green      → dark text
+  'Dining Out':               { bg: '#38761D' },   // dark green       → white text
+  'Work Lunch':               { bg: '#134F5C' },   // dark teal        → white text
+  'Work Coffee':              { bg: '#134F5C' },   // dark teal        → white text
+  'Shopping':                 { bg: '#351C75' },   // dark purple      → white text
+  'Gift':                     { bg: '#351C75' },   // dark purple      → white text
+  'Activity':                 { bg: '#D9D2E9' },   // light lavender   → dark text
+  'Housing':                  { bg: '#783F04' },   // dark brown       → white text
+  'Essentials':               { bg: '#783F04' },   // dark brown       → white text
+  'Health':                   { bg: '#F4CCCC' },   // light pink       → dark text
+  'Workout':                  { bg: '#A61C00' },   // dark red         → white text
+  'Pre-Tax Health Insurance': { bg: '#D0E0E3' },   // light blue-gray  → dark text
+  'Charity':                  { bg: '#EFEFEF' },   // light gray       → dark text
+  'Transportation':           { bg: '#7FA8C9' },   // medium blue      → dark text
+  // ── Remaining categories ──────────────────────────────────────────────────
+  'Ride Share':               { bg: '#5A9EC9' },   // medium blue      → dark text
+  'Travel':                   { bg: '#0d52a8' },   // dark blue        → white text
+};
+const FALLBACK_PILL_COLOR = { bg: '#6b7280' };
+</script>
+<script>
 const CATEGORIES = ['Housing','Transportation','Ride Share','Grocery','Health','Workout','Dining Out','Activity','Gift','Shopping','Travel','Essentials','Work Lunch','Work Coffee','Pre-Tax Health Insurance'];
 const SPENDING_CATS = ['Necessary Costs','Fun Spending','From Savings','Investments','Saving Goals','Post Tax Income','Pre-Tax','Bonus!'];
-
-// Default colors — bold, saturated backgrounds; text auto-computed by getContrastText().
-const DEFAULT_CATEGORY_COLORS = {
-  'Housing':                  { bg: '#753800', text: '#ffc8aa' },
-  'Essentials':               { bg: '#ffc8aa', text: '#753800' },
-  'Dining Out':               { bg: '#13734b', text: '#d4edbb' },
-  'Work Lunch':               { bg: '#215a6c', text: '#c6dce1' },
-  'Work Coffee':              { bg: '#c6dce1', text: '#215a6c' },
-  'Travel':                   { bg: '#0d52a8', text: '#bee0f6'},
-  'Workout':                  { bg: '#9e0101', text: '#ffcfc8' },
-  'Transportation':           { bg: '#bee0f6', text: '#0d52a8' },
-  'Ride Share':               { bg: '#5A9EC9' },
-  'Grocery':                  { bg: '#d4edbb', text: '#13734b' },
-  'Health':                   { bg: '#4A7A8C' },
-  'Shopping':                 { bg: '#6B3FA0' },
-  'Gift':                     { bg: '#8B008B' },
-  'Activity':                 { bg: '#5C4A8F' },
-  'Pre-Tax Health Insurance': { bg: '#3B7BBF' },
-};
 const DEFAULT_SPENDING_COLORS = {
   'Necessary Costs':  { bg: '#4B2E6E', text: '#e5cff3' },
   'Fun Spending':     { bg: '#D8C7EC' },
@@ -621,14 +633,11 @@ function lookupColor(map, key) {
   return null;
 }
 
-// Neutral fallback so any non-empty value always renders a colored pill,
-// even a custom category not present in the sheet or DEFAULT_* maps.
-const FALLBACK_PILL_COLOR = { bg: '#6b7280' };
-
-// Resolve color for a category — sheet colors take priority, then hardcoded defaults, then neutral fallback
+// Resolve color for a category — CATEGORY_COLORS is authoritative for known categories;
+// sheet colors only apply for categories not in the static map.
 function resolveCategoryColor(category) {
   if (!String(category || '').trim()) return null;
-  return lookupColor(categoryColors, category) || lookupColor(DEFAULT_CATEGORY_COLORS, category) || FALLBACK_PILL_COLOR;
+  return lookupColor(CATEGORY_COLORS, category) || lookupColor(categoryColors, category) || FALLBACK_PILL_COLOR;
 }
 function resolveSpendingColor(sc) {
   if (!String(sc || '').trim()) return null;
