@@ -23,9 +23,13 @@ function readExistingKeys() {
       const lastCol = sheet.getLastColumn();
       if (lastRow < 2) return;
 
-      const data = sheet.getRange(1, 1, lastRow, Math.max(lastCol, 6)).getValues();
-      const backgrounds = sheet.getRange(1, 1, lastRow, Math.max(lastCol, 6)).getBackgrounds();
-      const fontColors = sheet.getRange(1, 1, lastRow, Math.max(lastCol, 6)).getFontColors();
+      // Fetch all three data types with one getRange() reference to avoid
+      // creating redundant range objects (each getRange call is cheap, but
+      // consolidating makes intent clearer and is slightly more efficient).
+      const dataRange = sheet.getRange(1, 1, lastRow, Math.max(lastCol, 6));
+      const data = dataRange.getValues();
+      const backgrounds = dataRange.getBackgrounds();
+      const fontColors = dataRange.getFontColors();
 
       // Iterate newest → oldest so the first write into merchantHistory wins (= most recent categorization)
       for (let i = data.length - 1; i >= 1; i--) {
@@ -101,14 +105,17 @@ function doPost(e) {
       if (!sheet) { results.push(`Tab not found: ${month}`); return; }
       const lastRow = getLastDataRow(sheet);
       const appendAt = lastRow + 1;
-      rows.forEach((tx, i) => {
-        const rowNum = appendAt + i;
-        sheet.getRange(rowNum, 1).setValue(tx.date);
-        sheet.getRange(rowNum, 2).setValue(tx.business);
-        sheet.getRange(rowNum, 3).setValue(tx.amount);
-        sheet.getRange(rowNum, 4).setValue(tx.category);
-        sheet.getRange(rowNum, 5).setValue(tx.spending_category);
-        sheet.getRange(rowNum, 6).setValue(tx.notes || '');
+      const n = rows.length;
+
+      // Build value matrix and color arrays in one pass, then write with a
+      // single setValues() + two setBackgrounds()/setFontColors() calls instead
+      // of 6+ individual setValue/setBackground calls per row.
+      const values = [];
+      const backgrounds = [];
+      const fontColors = [];
+
+      rows.forEach(tx => {
+        values.push([tx.date, tx.business, tx.amount, tx.category, tx.spending_category, tx.notes || '']);
 
         // Amazon transactions get a bright yellow highlight to flag for review,
         // except Amazon Grocery purchases which are already well-categorized.
@@ -116,19 +123,30 @@ function doPost(e) {
         // so date, business, and amount remain uncolored.
         const isAmazon = String(tx.business).toUpperCase().includes('AMAZON');
         const isAmazonGrocery = isAmazon && String(tx.category).trim() === 'Grocery';
-        if (isAmazon && !isAmazonGrocery) {
-          sheet.getRange(rowNum, 4, 1, 2).setBackground('#fff2cc');
-          sheet.getRange(rowNum, 4, 1, 2).setFontColor('#7d5a00');
+
+        let catBg = null;
+        const isAmazonHighlight = isAmazon && !isAmazonGrocery;
+        if (isAmazonHighlight) {
+          catBg = '#fff2cc';
         } else {
-          // Apply background color matching the category's existing color in the sheet
           const color = categoryColors[String(tx.category).trim()];
-          if (color) {
-            sheet.getRange(rowNum, 4, 1, 2).setBackground(color.bg);
-            if (color.text) sheet.getRange(rowNum, 4, 1, 2).setFontColor(color.text);
-          }
+          if (color) catBg = color.bg;
         }
+
+        // backgrounds: highlight spans all 6 columns so the full row is visually marked;
+        // fontColors: explicitly set every column to black so inherited row formatting is always cleared;
+        // Amazon D–E get dark brown for contrast against the yellow background
+        const deFontColor = isAmazonHighlight ? '#7d5a00' : '#000000';
+        backgrounds.push([catBg, catBg, catBg, catBg, catBg, catBg]);
+        fontColors.push(['#000000', '#000000', '#000000', deFontColor, deFontColor, '#000000']);
       });
-      results.push(`${month}: wrote ${rows.length} row(s) starting at row ${appendAt}`);
+
+      const range = sheet.getRange(appendAt, 1, n, 6);
+      range.setValues(values);
+      range.setBackgrounds(backgrounds);
+      range.setFontColors(fontColors);
+
+      results.push(`${month}: wrote ${n} row(s) starting at row ${appendAt}`);
     });
 
     return ContentService
@@ -149,9 +167,10 @@ function buildCategoryColorMap(ss) {
     const lastRow = sheet.getLastRow();
     if (lastRow < 2) return;
     const lastCol = Math.max(sheet.getLastColumn(), 6);
-    const data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
-    const backgrounds = sheet.getRange(2, 1, lastRow - 1, lastCol).getBackgrounds();
-    const fontColors = sheet.getRange(2, 1, lastRow - 1, lastCol).getFontColors();
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol);
+    const data = dataRange.getValues();
+    const backgrounds = dataRange.getBackgrounds();
+    const fontColors = dataRange.getFontColors();
     for (let i = data.length - 1; i >= 0; i--) {
       const cat = String(data[i][3]).trim();
       if (!cat || categoryColors[cat]) continue;
