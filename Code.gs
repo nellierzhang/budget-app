@@ -110,11 +110,13 @@ function doPost(e) {
         sheet.getRange(rowNum, 5).setValue(tx.spending_category);
         sheet.getRange(rowNum, 6).setValue(tx.notes || '');
 
-        // Amazon transactions get a bright yellow highlight to flag for review.
+        // Amazon transactions get a bright yellow highlight to flag for review,
+        // except Amazon Grocery purchases which are already well-categorized.
         // Color is applied only to the category/spending_category columns (D–E)
         // so date, business, and amount remain uncolored.
         const isAmazon = String(tx.business).toUpperCase().includes('AMAZON');
-        if (isAmazon) {
+        const isAmazonGrocery = isAmazon && String(tx.category).trim() === 'Grocery';
+        if (isAmazon && !isAmazonGrocery) {
           sheet.getRange(rowNum, 4, 1, 2).setBackground('#fff2cc');
           sheet.getRange(rowNum, 4, 1, 2).setFontColor('#7d5a00');
         } else {

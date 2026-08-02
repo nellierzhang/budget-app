@@ -50,7 +50,7 @@
   td { padding: 7px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
   tbody tr:nth-child(even) { background: #f5f5f4; }
-  tr.is-new { background: #fffdf0; }
+  tbody tr.is-new { background: #fff2cc; }
   tr.is-history { background: #f5f8ff; }
   tr.is-dup { background: #f8fdf8; opacity: 0.6; }
   tr.is-credit td { color: var(--text-muted); }
@@ -66,7 +66,7 @@
   .merchant-cell { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .amount-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .amount-neg { color: #166534; }
-  .new-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: var(--warning-bg); color: var(--warning-text); border: 0.5px solid var(--warning-border); white-space: nowrap; }
+  .new-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #fff2cc; color: #7d5a00; border: 0.5px solid #ffe08a; white-space: nowrap; }
   .history-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: var(--history-bg); color: var(--history-text); border: 0.5px solid var(--history-border); white-space: nowrap; }
   .dup-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #f0fdf4; color: #166534; border: 0.5px solid #bbf7d0; white-space: nowrap; }
   .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; gap: 12px; flex-wrap: wrap; }
@@ -96,6 +96,8 @@
   .venmo-logo { font-size: 22px; font-weight: 800; color: #5b21b6; margin-bottom: 10px; letter-spacing: -1px; }
   tr.is-venmo { background: #faf5ff; }
   tr.is-venmo.is-credit td { color: var(--text-muted); }
+  tbody tr.is-amazon-review { background: #fff2cc; }
+  .amazon-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #fff2cc; color: #7d5a00; border: 0.5px solid #ffe08a; white-space: nowrap; }
   .venmo-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #f5f3ff; color: #5b21b6; border: 0.5px solid #c4b5fd; white-space: nowrap; }
 
   .filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; padding: 8px 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); }
@@ -385,7 +387,8 @@ async function handleVenmoFile(file) {
     }
     const newRows = rows.map(r => {
       const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
-      return { ...r, category, spending_category, notes: r.venmoNote || '', isNew, isFromHistory, isDuplicate: false };
+      const isAmazonReview = String(r.business).toUpperCase().includes('AMAZON') && category !== 'Grocery';
+      return { ...r, category, spending_category, notes: r.venmoNote || '', isNew, isFromHistory, isAmazonReview, isDuplicate: false };
     });
     // Replace any previously-loaded Venmo rows, keep Capital One rows
     classifiedRows = [...classifiedRows.filter(r => r.source !== 'venmo'), ...newRows]
@@ -553,7 +556,8 @@ async function handleCSVFile(file) {
     }
     const newRows = rows.map(r => {
       const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
-      return { ...r, source: 'capitalOne', category, spending_category, notes: '', isNew, isFromHistory, isDuplicate: false };
+      const isAmazonReview = String(r.business).toUpperCase().includes('AMAZON') && category !== 'Grocery';
+      return { ...r, source: 'capitalOne', category, spending_category, notes: '', isNew, isFromHistory, isAmazonReview, isDuplicate: false };
     });
     // Replace previously-loaded Capital One rows, keep any Venmo rows
     classifiedRows = [...classifiedRows.filter(r => r.source === 'venmo'), ...newRows].sort((a, b) => {
@@ -724,14 +728,16 @@ function renderResults() {
             r.isDuplicate ? 'is-dup' : '',
             r.isNew && r.isFromHistory && !r.isDuplicate ? 'is-history' : '',
             r.isNew && !r.isFromHistory && !r.isDuplicate ? 'is-new' : '',
+            r.isAmazonReview && !r.isDuplicate ? 'is-amazon-review' : '',
             r.isCredit ? 'is-credit' : ''
           ].filter(Boolean).join(' ');
 
           let badge = '';
           if (r.isDuplicate) badge = '<br><span class="dup-badge">duplicate — will skip</span>';
           else if (r.source === 'venmo') badge = '<br><span class="venmo-badge">Venmo</span>';
+          else if (r.isAmazonReview) badge = '<br><span class="amazon-badge">review</span>';
           else if (r.isFromHistory) badge = '<br><span class="history-badge">from history</span>';
-          else if (r.isNew) badge = '<br><span class="new-badge">review</span>';
+          else if (r.isNew) badge = '<br><span class="amazon-badge">review</span>';
 
           const catPillVars = getCategorySelectStyle(r.category);
           const spendPillVars = getSpendingSelectStyle(r.spending_category);

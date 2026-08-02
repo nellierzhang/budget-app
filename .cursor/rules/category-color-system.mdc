@@ -42,4 +42,4 @@ Use `getCategorySelectStyle(category)` / `getSpendingSelectStyle(sc)` to get the
 
 ## Amazon row coloring (sheet-side)
 
-In `Code.gs`, Amazon rows (`business` contains `'AMAZON'`) always get `bg #fff2cc / font #7d5a00` regardless of category. All other rows inherit the category color from `buildCategoryColorMap`. This is separate from the front-end pill colors.
+In `Code.gs`, Amazon rows (`business` contains `'AMAZON'`) get `bg #fff2cc / font #7d5a00` to flag them for review — **except** when `category === 'Grocery'` (Amazon Grocery / Amazon Tips), which inherits the normal category color from `buildCategoryColorMap` instead. All other non-Amazon rows also inherit their category color. This is separate from the front-end pill colors.
