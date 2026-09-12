@@ -718,6 +718,7 @@ function renderResults() {
   // Filter bar — only show when there's something to filter
   const filterBar = (hasVenmo || reviewPendingCount > 0) ? `
     <div class="filter-bar">
+      ${hasVenmo ? `
       <span class="filter-label">Source</span>
       <div class="filter-group">
         <button class="filter-btn ${activeFilters.source==='all'?'active':''}" onclick="setFilter('source','all')">All</button>
@@ -731,7 +732,7 @@ function renderResults() {
         <button class="filter-btn ${activeFilters.venmoType==='sent'?'venmo-active':''}" onclick="setFilter('venmoType','sent')">↑ Sent</button>
         <button class="filter-btn ${activeFilters.venmoType==='received'?'venmo-active':''}" onclick="setFilter('venmoType','received')">↓ Received</button>
       </div>
-      <div class="filter-sep"></div>
+      <div class="filter-sep"></div>` : ''}
       <input class="filter-search" placeholder="Search note / merchant…" value="${activeFilters.search}" oninput="setFilter('search',this.value)">
       ${reviewFilterBar}
     </div>` : '';
