@@ -8,17 +8,21 @@ alwaysApply: false
 
 When `saveRule(i)` is called in `index.html`, after saving the rule to `userRules` and localStorage, iterate through all `classifiedRows` at indices **greater than `i`** and apply the new category/spending_category to any row whose merchant name contains the rule key (same substring-match logic as `matchRule`). Skip duplicate rows.
 
+Use `merchantRuleKey(row.business)` for the stored key and `merchantMatchesRuleKey` for matching (same normalization as `matchMerchantRule`).
+
 ```js
 // After saving userRules[key]:
-for (let j = i + 1; j < classifiedRows.length; j++) {
+for (let j = 0; j < classifiedRows.length; j++) {
   const r = classifiedRows[j];
   if (r.isDuplicate) continue;
-  const m = r.business.toUpperCase().replace(/\s+/g, ' ').trim();
-  if (m.includes(key)) {
+  if (!merchantMatchesRuleKey(r.business, key)) continue;
+  r.isNew = false;
+  r.isFromHistory = false;
+  if (j > i) {
     r.category = row.category;
     r.spending_category = row.spending_category;
   }
 }
 ```
 
-The cascade only flows **downward** (rows after `i`) — it does not retroactively change rows above the saved rule.
+Category/spending cascade only flows **downward** (rows after `i`). Review flags (`isNew`, `isFromHistory`) clear on **all** matching rows so saved rules stop showing “review” / “from history”.

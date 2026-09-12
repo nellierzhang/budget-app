@@ -280,6 +280,37 @@ let sheetHistory = {};
 let categoryColors = {}; // category name → { bg, text } from Google Sheet
 let activeFilters = { source: 'all', venmoType: 'all', search: '' };
 
+function normalizeMerchantName(merchant) {
+  return String(merchant).toUpperCase().replace(/[^A-Z0-9\s\*]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function merchantRuleKey(merchant) {
+  return normalizeMerchantName(merchant).substring(0, 22).trim();
+}
+
+function merchantMatchesRuleKey(merchant, ruleKey) {
+  const m = normalizeMerchantName(merchant);
+  const k = normalizeMerchantName(ruleKey);
+  if (!m || !k) return false;
+  return m.includes(k) || k.includes(m);
+}
+
+function migrateUserRules() {
+  let changed = false;
+  const next = {};
+  for (const [key, val] of Object.entries(userRules)) {
+    const nk = merchantRuleKey(key);
+    if (!next[nk]) next[nk] = val;
+    if (nk !== key) changed = true;
+  }
+  if (changed) {
+    userRules = next;
+    localStorage.setItem('budget_rules', JSON.stringify(userRules));
+  }
+}
+
+migrateUserRules();
+
 window.addEventListener('DOMContentLoaded', () => {
   if (webhookUrl) { document.getElementById('webhook-input').value = webhookUrl; updateDot(true); }
   renderRulesSection();
@@ -307,22 +338,23 @@ function parseDateStr(val) {
 }
 
 function matchMerchantRule(merchant) {
-  const m = merchant.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g, ' ').trim();
+  const m = normalizeMerchantName(merchant);
   for (const [key, val] of Object.entries(userRules)) {
-    if (m.includes(key.toUpperCase()) || key.toUpperCase().includes(m)) return val;
+    if (merchantMatchesRuleKey(m, key)) return val;
   }
   for (const [key, val] of Object.entries(BUILTIN_RULES)) {
-    if (m.includes(key.toUpperCase())) return val;
+    const k = normalizeMerchantName(key);
+    if (m.includes(k)) return val;
   }
   return null;
 }
 
 // Checks sheet history for a merchant using substring matching
 function matchSheetHistory(merchant) {
-  const m = merchant.toUpperCase().replace(/\s+/g, ' ').trim();
+  const m = normalizeMerchantName(merchant);
   for (const [key, val] of Object.entries(sheetHistory)) {
-    // Match if the new merchant contains the history key, or the history key contains the new merchant
-    if (m.includes(key) || key.includes(m)) return val;
+    const k = normalizeMerchantName(key);
+    if (m.includes(k) || k.includes(m)) return val;
   }
   return null;
 }
@@ -799,18 +831,17 @@ function updateRow(i, field, val) {
 
 function saveRule(i) {
   const row = classifiedRows[i];
-  const key = row.business.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').trim().substring(0, 22).trim();
+  const key = merchantRuleKey(row.business);
   userRules[key] = { category: row.category, spending_category: row.spending_category };
   localStorage.setItem('budget_rules', JSON.stringify(userRules));
-  classifiedRows[i].isNew = false;
-  classifiedRows[i].isFromHistory = false;
 
-  // Apply the new rule to all subsequent rows that match the same merchant
-  for (let j = i + 1; j < classifiedRows.length; j++) {
+  for (let j = 0; j < classifiedRows.length; j++) {
     const r = classifiedRows[j];
     if (r.isDuplicate) continue;
-    const m = r.business.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g, ' ').trim();
-    if (m.includes(key)) {
+    if (!merchantMatchesRuleKey(r.business, key)) continue;
+    r.isNew = false;
+    r.isFromHistory = false;
+    if (j > i) {
       r.category = row.category;
       r.spending_category = row.spending_category;
     }
