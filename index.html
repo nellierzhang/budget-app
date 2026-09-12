@@ -44,37 +44,29 @@
   .dup-chip { background: #f0fdf4; color: #166534; border-color: #bbf7d0; font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
   .table-wrap { overflow-x: hidden; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-  th { text-align: left; padding: 10px 8px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 0.5px solid var(--border); line-height: 1.25; }
-  th.col-date { width: 7%; }
-  th.col-merchant { width: 22%; }
-  th.col-type { width: 8%; }
-  th.col-amount { width: 8%; }
-  th.col-category { width: 16%; }
-  th.col-spending { width: 16%; }
-  th.col-notes { width: 14%; }
-  th.col-action { width: 8%; }
+  th { text-align: left; padding: 8px 6px; font-size: 10px; font-weight: 500; color: var(--text-muted); border-bottom: 0.5px solid var(--border); line-height: 1.25; }
   th.pill-th { background: #2F5D4F; color: #ffffff; font-weight: 700; font-size: 12px; }
   th.pill-th .th-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.45); margin-right: 6px; vertical-align: middle; position: relative; top: -1px; }
-  td { padding: 7px 8px; border-bottom: 0.5px solid var(--border); vertical-align: middle; overflow: hidden; min-width: 0; }
+  td { padding: 6px 6px; border-bottom: 0.5px solid var(--border); vertical-align: middle; overflow: hidden; min-width: 0; }
   tr:last-child td { border-bottom: none; }
   tbody tr:nth-child(even) { background: #f5f5f4; }
   tbody tr.is-new { background: #fff2cc; }
   tr.is-history { background: #f5f8ff; }
   tr.is-dup { background: #f8fdf8; opacity: 0.6; }
   tr.is-credit td { color: var(--text-muted); }
-  td select, td input[type=text] { font-size: 12px; padding: 4px 6px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
+  td select, td input[type=text] { font-size: 11px; padding: 4px 4px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; min-width: 0; max-width: 100%; font-family: inherit; }
   td select:focus, td input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-  .pill-cell { position: relative; display: flex; width: 100%; max-width: 100%; min-width: 0; }
-  .pill-cell .pill-select { width: 100%; min-width: 0; max-width: 100%; padding: 4px 26px 4px 10px; border: none; border-radius: 999px; background: var(--pill); color: var(--pilltext); font-weight: 600; font-size: 11px; -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill-cell { position: relative; display: block; width: 100%; min-width: 0; max-width: 100%; }
+  .pill-cell .pill-select { width: 100%; min-width: 0; max-width: 100%; padding: 4px 26px 4px 8px; border: none; border-radius: 999px; background: var(--pill); color: var(--pilltext); font-weight: 600; font-size: 11px; -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
   .pill-cell .pill-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .pill-cell::after { content: ""; position: absolute; top: 2px; right: 2px; bottom: 2px; width: 22px; border-radius: 0 999px 999px 0; background: color-mix(in srgb, var(--pill) 78%, #000); pointer-events: none; }
   .pill-cell::before { content: ""; position: absolute; top: 50%; right: 8px; width: 0; height: 0; margin-top: -2px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--pilltext); pointer-events: none; z-index: 1; }
   .pill-cell .pill-select:disabled { cursor: default; }
   .date-cell { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-  .merchant-cell { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .type-cell { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .merchant-cell { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .type-cell { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .action-cell { text-align: right; white-space: nowrap; }
-  .action-cell .btn-ghost { font-size: 11px; padding: 4px 8px; }
+  .action-cell .btn-ghost { font-size: 10px; padding: 3px 6px; }
   .amount-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .amount-neg { color: #166534; }
   .new-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #fff2cc; color: #7d5a00; border: 0.5px solid #ffe08a; white-space: nowrap; }
@@ -121,6 +113,17 @@
   .filter-btn:hover:not(.active):not(.venmo-active) { background: var(--bg); }
   .filter-search { flex: 1; min-width: 140px; font-size: 12px; padding: 4px 8px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text); font-family: inherit; }
   .filter-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  th.review-th, td.review-cell { text-align: center; padding-left: 2px; padding-right: 2px; }
+  .review-check {
+    width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--border-strong);
+    background: var(--surface); color: var(--text-muted); cursor: pointer; font-size: 13px; font-weight: 600;
+    line-height: 1; display: inline-flex; align-items: center; justify-content: center; font-family: inherit;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .review-check:hover:not(:disabled) { border-color: #16a34a; background: var(--success-bg); color: var(--success-text); }
+  .review-check.is-confirmed { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); cursor: default; }
+  tbody tr.is-review-confirmed { background: inherit; }
+  tbody tr.is-review-confirmed:nth-child(even) { background: #f5f5f4; }
 </style>
 </head>
 <body>
@@ -289,7 +292,50 @@ let webhookUrl = localStorage.getItem('budget_webhook') || '';
 let userRules = JSON.parse(localStorage.getItem('budget_rules') || '{}');
 let sheetHistory = {};
 let categoryColors = {}; // category name → { bg, text } from Google Sheet
-let activeFilters = { source: 'all', venmoType: 'all', search: '' };
+let activeFilters = { source: 'all', venmoType: 'all', search: '', review: 'all' };
+
+function needsReview(r) {
+  if (r.isDuplicate || r.reviewConfirmed) return false;
+  return !!(r.isNew || r.isFromHistory || r.isAmazonReview);
+}
+
+function confirmReview(i) {
+  const row = classifiedRows[i];
+  if (!row || row.isDuplicate || !needsReview(row)) return;
+  row.reviewConfirmed = true;
+  renderResults();
+}
+
+function normalizeMerchantName(merchant) {
+  return String(merchant).toUpperCase().replace(/[^A-Z0-9\s\*]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function merchantRuleKey(merchant) {
+  return normalizeMerchantName(merchant).substring(0, 22).trim();
+}
+
+function merchantMatchesRuleKey(merchant, ruleKey) {
+  const m = normalizeMerchantName(merchant);
+  const k = normalizeMerchantName(ruleKey);
+  if (!m || !k) return false;
+  return m.includes(k) || k.includes(m);
+}
+
+function migrateUserRules() {
+  let changed = false;
+  const next = {};
+  for (const [key, val] of Object.entries(userRules)) {
+    const nk = merchantRuleKey(key);
+    if (!next[nk]) next[nk] = val;
+    if (nk !== key) changed = true;
+  }
+  if (changed) {
+    userRules = next;
+    localStorage.setItem('budget_rules', JSON.stringify(userRules));
+  }
+}
+
+migrateUserRules();
 
 window.addEventListener('DOMContentLoaded', () => {
   if (webhookUrl) { document.getElementById('webhook-input').value = webhookUrl; updateDot(true); }
@@ -318,22 +364,23 @@ function parseDateStr(val) {
 }
 
 function matchMerchantRule(merchant) {
-  const m = merchant.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g, ' ').trim();
+  const m = normalizeMerchantName(merchant);
   for (const [key, val] of Object.entries(userRules)) {
-    if (m.includes(key.toUpperCase()) || key.toUpperCase().includes(m)) return val;
+    if (merchantMatchesRuleKey(m, key)) return val;
   }
   for (const [key, val] of Object.entries(BUILTIN_RULES)) {
-    if (m.includes(key.toUpperCase())) return val;
+    const k = normalizeMerchantName(key);
+    if (m.includes(k)) return val;
   }
   return null;
 }
 
 // Checks sheet history for a merchant using substring matching
 function matchSheetHistory(merchant) {
-  const m = merchant.toUpperCase().replace(/\s+/g, ' ').trim();
+  const m = normalizeMerchantName(merchant);
   for (const [key, val] of Object.entries(sheetHistory)) {
-    // Match if the new merchant contains the history key, or the history key contains the new merchant
-    if (m.includes(key) || key.includes(m)) return val;
+    const k = normalizeMerchantName(key);
+    if (m.includes(k) || k.includes(m)) return val;
   }
   return null;
 }
@@ -399,7 +446,7 @@ async function handleVenmoFile(file) {
     const newRows = rows.map(r => {
       const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
       const isAmazonReview = String(r.business).toUpperCase().includes('AMAZON') && category !== 'Grocery';
-      return { ...r, category, spending_category, notes: r.venmoNote || '', isNew, isFromHistory, isAmazonReview, isDuplicate: false };
+      return { ...r, category, spending_category, notes: r.venmoNote || '', isNew, isFromHistory, isAmazonReview, isDuplicate: false, reviewConfirmed: false };
     });
     // Replace any previously-loaded Venmo rows, keep Capital One rows
     classifiedRows = [...classifiedRows.filter(r => r.source !== 'venmo'), ...newRows]
@@ -408,8 +455,8 @@ async function handleVenmoFile(file) {
         if (a.parsedDate) return -1; if (b.parsedDate) return 1; return 0;
       });
     const autoCount = newRows.filter(r => !r.isNew).length;
-    const unknownCount = newRows.filter(r => r.isNew).length;
-    setStatus(`${rows.length} Venmo transactions loaded · ${autoCount} auto-categorized · ${unknownCount} need review · ${skipped} transfers skipped`);
+    const reviewCount = newRows.filter(r => needsReview(r)).length;
+    setStatus(`${rows.length} Venmo transactions loaded · ${autoCount} auto-categorized · ${reviewCount} need review · ${skipped} transfers skipped`);
     renderResults();
   };
   reader.readAsText(file);
@@ -532,6 +579,7 @@ function getFilteredRows() {
       if (activeFilters.venmoType === 'sent' && (r.source !== 'venmo' || r.isCredit)) return false;
       if (activeFilters.venmoType === 'received' && (r.source !== 'venmo' || !r.isCredit)) return false;
       if (q && !r.business.toLowerCase().includes(q) && !(r.venmoNote || '').toLowerCase().includes(q)) return false;
+      if (activeFilters.review === 'pending' && !needsReview(r)) return false;
       return true;
     });
 }
@@ -568,7 +616,7 @@ async function handleCSVFile(file) {
     const newRows = rows.map(r => {
       const { category, spending_category, isNew, isFromHistory } = classifyRow(r);
       const isAmazonReview = String(r.business).toUpperCase().includes('AMAZON') && category !== 'Grocery';
-      return { ...r, source: 'capitalOne', category, spending_category, notes: '', isNew, isFromHistory, isAmazonReview, isDuplicate: false };
+      return { ...r, source: 'capitalOne', category, spending_category, notes: '', isNew, isFromHistory, isAmazonReview, isDuplicate: false, reviewConfirmed: false };
     });
     // Replace previously-loaded Capital One rows, keep any Venmo rows
     classifiedRows = [...classifiedRows.filter(r => r.source === 'venmo'), ...newRows].sort((a, b) => {
@@ -580,11 +628,11 @@ async function handleCSVFile(file) {
 
     const autoCount = newRows.filter(r => !r.isNew).length;
     const historyCount = newRows.filter(r => r.isNew && r.isFromHistory).length;
-    const unknownCount = newRows.filter(r => r.isNew && !r.isFromHistory).length;
+    const reviewCount = newRows.filter(r => needsReview(r)).length;
 
     let statusParts = [`${rows.length} Capital One transactions loaded`, `${autoCount} auto-categorized`];
     if (historyCount > 0) statusParts.push(`${historyCount} suggested from sheet history`);
-    if (unknownCount > 0) statusParts.push(`${unknownCount} need review`);
+    if (reviewCount > 0) statusParts.push(`${reviewCount} need review`);
     statusParts.push(`${skipped} payments skipped`);
     setStatus(statusParts.join(' · '));
 
@@ -688,15 +736,24 @@ function renderResults() {
 
   const months = [...new Set(classifiedRows.map(r => r.month))];
   const total = classifiedRows.filter(r => r.amount > 0 && !r.isDuplicate).reduce((s, r) => s + r.amount, 0);
-  const historyCount = classifiedRows.filter(r => r.isNew && r.isFromHistory && !r.isDuplicate).length;
-  const unknownCount = classifiedRows.filter(r => r.isNew && !r.isFromHistory && !r.isDuplicate).length;
+  const historyCount = classifiedRows.filter(r => r.isNew && r.isFromHistory && !r.isDuplicate && !r.reviewConfirmed).length;
+  const reviewPendingCount = classifiedRows.filter(r => needsReview(r)).length;
   const dupCount = classifiedRows.filter(r => r.isDuplicate).length;
 
   const filteredRows = getFilteredRows();
 
+  const reviewFilterBar = reviewPendingCount > 0 ? `
+    <div class="filter-sep"></div>
+    <span class="filter-label">Review</span>
+    <div class="filter-group">
+      <button class="filter-btn ${activeFilters.review==='all'?'active':''}" onclick="setFilter('review','all')">All rows</button>
+      <button class="filter-btn ${activeFilters.review==='pending'?'active':''}" onclick="setFilter('review','pending')">Needs review (${reviewPendingCount})</button>
+    </div>` : '';
+
   // Filter bar — only show when there's something to filter
-  const filterBar = (hasVenmo) ? `
+  const filterBar = (hasVenmo || reviewPendingCount > 0) ? `
     <div class="filter-bar">
+      ${hasVenmo ? `
       <span class="filter-label">Source</span>
       <div class="filter-group">
         <button class="filter-btn ${activeFilters.source==='all'?'active':''}" onclick="setFilter('source','all')">All</button>
@@ -710,8 +767,9 @@ function renderResults() {
         <button class="filter-btn ${activeFilters.venmoType==='sent'?'venmo-active':''}" onclick="setFilter('venmoType','sent')">↑ Sent</button>
         <button class="filter-btn ${activeFilters.venmoType==='received'?'venmo-active':''}" onclick="setFilter('venmoType','received')">↓ Received</button>
       </div>
-      <div class="filter-sep"></div>
+      <div class="filter-sep"></div>` : ''}
       <input class="filter-search" placeholder="Search note / merchant…" value="${activeFilters.search}" oninput="setFilter('search',this.value)">
+      ${reviewFilterBar}
     </div>` : '';
 
   document.getElementById('results').innerHTML = `
@@ -720,16 +778,27 @@ function renderResults() {
       <div class="chip">$<strong>${total.toFixed(2)}</strong> in expenses</div>
       ${months.map(m => `<span class="month-chip">${m}</span>`).join('')}
       ${historyCount > 0 ? `<span class="history-chip">◷ ${historyCount} from sheet history</span>` : ''}
-      ${unknownCount > 0 ? `<span class="new-chip">⚠ ${unknownCount} need review</span>` : ''}
+      ${reviewPendingCount > 0 ? `<span class="new-chip">⚠ ${reviewPendingCount} need review</span>` : ''}
       ${dupCount > 0 ? `<span class="dup-chip">✓ ${dupCount} duplicates detected</span>` : ''}
     </div>
     ${filterBar}
     <div class="table-wrap"><table>
+      <colgroup>
+        <col style="width:7%">
+        <col style="width:21%">
+        <col style="width:8%">
+        <col style="width:8%">
+        <col style="width:15%">
+        <col style="width:15%">
+        <col style="width:12%">
+        <col style="width:7%">
+        <col style="width:7%">
+      </colgroup>
       <thead><tr>
-        <th class="col-date">Date</th><th class="col-merchant">Merchant / Note</th><th class="col-type">Type</th><th class="col-amount">Amount</th>
-        <th class="col-category">Category</th>
-        <th class="col-spending">Spending</th>
-        <th class="col-notes">Notes</th><th class="col-action"></th>
+        <th>Date</th><th>Merchant / Note</th><th>Type</th><th>Amount</th>
+        <th>Category</th>
+        <th>Spending</th>
+        <th>Notes</th><th></th><th class="review-th" title="Confirm your category adjustments">✓</th>
       </tr></thead>
       <tbody>
         ${filteredRows.map((r) => {
@@ -737,18 +806,19 @@ function renderResults() {
           const rowClass = [
             r.source === 'venmo' ? 'is-venmo' : '',
             r.isDuplicate ? 'is-dup' : '',
-            r.isNew && r.isFromHistory && !r.isDuplicate ? 'is-history' : '',
-            r.isNew && !r.isFromHistory && !r.isDuplicate ? 'is-new' : '',
-            r.isAmazonReview && !r.isDuplicate ? 'is-amazon-review' : '',
+            r.reviewConfirmed && !r.isDuplicate ? 'is-review-confirmed' : '',
+            r.isNew && r.isFromHistory && !r.isDuplicate && !r.reviewConfirmed ? 'is-history' : '',
+            r.isNew && !r.isFromHistory && !r.isDuplicate && !r.reviewConfirmed ? 'is-new' : '',
+            r.isAmazonReview && !r.isDuplicate && !r.reviewConfirmed ? 'is-amazon-review' : '',
             r.isCredit ? 'is-credit' : ''
           ].filter(Boolean).join(' ');
 
           let badge = '';
           if (r.isDuplicate) badge = '<br><span class="dup-badge">duplicate — will skip</span>';
           else if (r.source === 'venmo') badge = '<br><span class="venmo-badge">Venmo</span>';
-          else if (r.isAmazonReview) badge = '<br><span class="amazon-badge">review</span>';
-          else if (r.isFromHistory) badge = '<br><span class="history-badge">from history</span>';
-          else if (r.isNew) badge = '<br><span class="amazon-badge">review</span>';
+          else if (!r.reviewConfirmed && r.isAmazonReview) badge = '<br><span class="amazon-badge">review</span>';
+          else if (!r.reviewConfirmed && r.isFromHistory) badge = '<br><span class="history-badge">from history</span>';
+          else if (!r.reviewConfirmed && r.isNew) badge = '<br><span class="amazon-badge">review</span>';
 
           const catPillVars = getCategorySelectStyle(r.category);
           const spendPillVars = getSpendingSelectStyle(r.spending_category);
@@ -772,12 +842,13 @@ function renderResults() {
                 ? `<span class="pill-cell" id="spend-pill-${i}" style="${spendPillVars}"><select id="spend-sel-${i}" class="pill-select" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></span>`
                 : `<span id="spend-pill-${i}"><select id="spend-sel-${i}" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></span>`}</td>
             <td><input type="text" value="${r.notes||''}" oninput="updateRow(${i},'notes',this.value)" placeholder="—" ${r.isDuplicate ? 'disabled' : ''}></td>
-            <td class="action-cell">${(r.isNew || r.isFromHistory) && !r.isDuplicate ? `<button class="btn-ghost" onclick="saveRule(${i})">Save</button>` : ''}</td>
+            <td class="action-cell">${(r.isNew || r.isFromHistory) && !r.isDuplicate && !r.reviewConfirmed ? `<button class="btn-ghost" onclick="saveRule(${i})">Save</button>` : ''}</td>
+            <td class="review-cell">${needsReview(r) ? `<button type="button" class="review-check" title="Confirm this row looks correct" aria-label="Confirm review for ${r.business.replace(/"/g, '&quot;')}" onclick="confirmReview(${i})">✓</button>` : (r.reviewConfirmed ? `<button type="button" class="review-check is-confirmed" title="Review confirmed" aria-label="Review confirmed" disabled>✓</button>` : '')}</td>
           </tr>`;
         }).join('')}
       </tbody>
     </table></div>
-    ${filteredRows.length < classifiedRows.length ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Showing ${filteredRows.length} of ${classifiedRows.length} transactions · <a href="#" style="color:var(--accent)" onclick="setFilter('source','all');setFilter('venmoType','all');setFilter('search','');return false">Clear filters</a></p>` : ''}
+    ${filteredRows.length < classifiedRows.length ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Showing ${filteredRows.length} of ${classifiedRows.length} transactions · <a href="#" style="color:var(--accent)" onclick="setFilter('source','all');setFilter('venmoType','all');setFilter('search','');setFilter('review','all');return false">Clear filters</a></p>` : ''}
     <div class="action-row">
       <button class="btn-ghost" onclick="clearAll()">Clear</button>
       <button class="btn-primary" id="write-btn" onclick="writeToSheet()">Check duplicates & write →</button>
@@ -800,6 +871,12 @@ function applyPill(wrap, sel, vars) {
 
 function updateRow(i, field, val) {
   classifiedRows[i][field] = val;
+  const row = classifiedRows[i];
+  if (field === 'category' || field === 'spending_category' || field === 'notes') {
+    if (row.reviewConfirmed && (row.isNew || row.isFromHistory || row.isAmazonReview)) {
+      row.reviewConfirmed = false;
+    }
+  }
   if (field === 'category') {
     applyPill(document.getElementById(`cat-pill-${i}`), document.getElementById(`cat-sel-${i}`), getCategorySelectStyle(val));
   }
@@ -810,18 +887,18 @@ function updateRow(i, field, val) {
 
 function saveRule(i) {
   const row = classifiedRows[i];
-  const key = row.business.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').trim().substring(0, 22).trim();
+  const key = merchantRuleKey(row.business);
   userRules[key] = { category: row.category, spending_category: row.spending_category };
   localStorage.setItem('budget_rules', JSON.stringify(userRules));
-  classifiedRows[i].isNew = false;
-  classifiedRows[i].isFromHistory = false;
 
-  // Apply the new rule to all subsequent rows that match the same merchant
-  for (let j = i + 1; j < classifiedRows.length; j++) {
+  for (let j = 0; j < classifiedRows.length; j++) {
     const r = classifiedRows[j];
     if (r.isDuplicate) continue;
-    const m = r.business.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g, ' ').trim();
-    if (m.includes(key)) {
+    if (!merchantMatchesRuleKey(r.business, key)) continue;
+    r.isNew = false;
+    r.isFromHistory = false;
+    r.reviewConfirmed = true;
+    if (j > i) {
       r.category = row.category;
       r.spending_category = row.spending_category;
     }
@@ -855,7 +932,7 @@ function renderRulesSection() {
 
 function clearAll() {
   classifiedRows = [];
-  activeFilters = { source: 'all', venmoType: 'all', search: '' };
+  activeFilters = { source: 'all', venmoType: 'all', search: '', review: 'all' };
   document.getElementById('results').innerHTML = '';
   setStatus('');
   document.getElementById('csv-file').value = '';
