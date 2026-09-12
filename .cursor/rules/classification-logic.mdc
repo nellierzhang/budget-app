@@ -27,7 +27,7 @@ m.includes(key.toUpperCase()) || key.toUpperCase().includes(m)
 m.includes(key) || key.includes(m)
 ```
 
-Merchant keys are normalized: `.toUpperCase().replace(/[^A-Z0-9\s\*]/g,'').replace(/\s+/g,' ').trim()`
+Merchant names and rule keys use `normalizeMerchantName()` (uppercase, strip punctuation, collapse whitespace). Saved rule keys use `merchantRuleKey()` — normalized prefix, max 22 chars. `migrateUserRules()` rewrites legacy localStorage keys on load so old saves still match.
 
 ## Adding a new built-in rule
 
