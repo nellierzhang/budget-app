@@ -7,7 +7,7 @@ A personal finance tool that imports Capital One and Venmo transactions, auto-ca
 1. Open `index.html` in your browser
 2. Paste your Apps Script web app URL into the Setup field
 3. Drop in a Capital One CSV and/or a Venmo statement CSV
-4. Review and adjust categories in the table
+4. Review and adjust categories in the table; click the **✓** at the end of each flagged row when it looks correct
 5. Click **Check duplicates & write →** to push new transactions to your Google Sheet
 
 ## Project Structure
@@ -50,6 +50,8 @@ Transactions are classified in priority order:
 3. **Sheet history** — the most recent category used for that merchant in the sheet (fetched on CSV load)
 4. **Capital One bank category** — maps Capital One's own categories (Dining, Grocery, Health Care, etc.) to the app's categories
 5. **Default fallback** — `Shopping / Fun Spending`, flagged for review
+
+Rows flagged for review (unknown merchants, sheet-history suggestions, and non-grocery Amazon purchases) show a **✓** button in the rightmost column. Click it after you adjust categories to confirm the row; editing a confirmed row clears the checkmark until you confirm again. Use **Needs review** in the filter bar to focus on unconfirmed rows.
 
 ## Duplicate Detection
 
