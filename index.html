@@ -15,8 +15,8 @@
     --history-bg: #eff6ff; --history-border: #bfdbfe; --history-text: #1e40af;
     --radius: 8px;
   }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
-  .container { max-width: 1000px; margin: 0 auto; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; overflow-x: hidden; }
+  .container { max-width: 1000px; width: 100%; margin: 0 auto; }
   h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
   .subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 2rem; }
   .setup-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
@@ -42,28 +42,30 @@
   .new-chip { background: var(--warning-bg); color: var(--warning-text); border-color: var(--warning-border); font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
   .history-chip { background: var(--history-bg); color: var(--history-text); border-color: var(--history-border); font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
   .dup-chip { background: #f0fdf4; color: #166534; border-color: #bbf7d0; font-size: 11px; padding: 4px 10px; border-radius: var(--radius); }
-  .table-wrap { overflow-x: auto; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: var(--text-muted); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  .table-wrap { overflow-x: hidden; border: 0.5px solid var(--border); border-radius: 12px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  th { text-align: left; padding: 8px 6px; font-size: 10px; font-weight: 500; color: var(--text-muted); border-bottom: 0.5px solid var(--border); line-height: 1.25; }
   th.pill-th { background: #2F5D4F; color: #ffffff; font-weight: 700; font-size: 12px; }
   th.pill-th .th-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.45); margin-right: 6px; vertical-align: middle; position: relative; top: -1px; }
-  td { padding: 7px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  td { padding: 6px 6px; border-bottom: 0.5px solid var(--border); vertical-align: middle; overflow: hidden; }
   tr:last-child td { border-bottom: none; }
   tbody tr:nth-child(even) { background: #f5f5f4; }
   tbody tr.is-new { background: #fff2cc; }
   tr.is-history { background: #f5f8ff; }
   tr.is-dup { background: #f8fdf8; opacity: 0.6; }
   tr.is-credit td { color: var(--text-muted); }
-  td select, td input[type=text] { font-size: 12px; padding: 4px 6px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
+  td select, td input[type=text] { font-size: 11px; padding: 4px 4px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); width: 100%; min-width: 0; max-width: 100%; font-family: inherit; }
   td select:focus, td input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-  .pill-cell { position: relative; display: inline-flex; max-width: 100%; }
-  .pill-cell .pill-select { width: auto; max-width: 100%; padding: 4px 30px 4px 12px; border: none; border-radius: 999px; background: var(--pill); color: var(--pilltext); font-weight: 600; -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; text-overflow: ellipsis; }
+  .pill-cell { position: relative; display: block; width: 100%; min-width: 0; max-width: 100%; }
+  .pill-cell .pill-select { width: 100%; max-width: 100%; padding: 4px 26px 4px 8px; border: none; border-radius: 999px; background: var(--pill); color: var(--pilltext); font-weight: 600; font-size: 11px; -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
   .pill-cell .pill-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .pill-cell::after { content: ""; position: absolute; top: 2px; right: 2px; bottom: 2px; width: 22px; border-radius: 0 999px 999px 0; background: color-mix(in srgb, var(--pill) 78%, #000); pointer-events: none; }
   .pill-cell::before { content: ""; position: absolute; top: 50%; right: 8px; width: 0; height: 0; margin-top: -2px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--pilltext); pointer-events: none; z-index: 1; }
   .pill-cell .pill-select:disabled { cursor: default; }
   .date-cell { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-  .merchant-cell { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .merchant-cell { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .type-cell { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .action-cell { text-align: right; white-space: nowrap; }
   .amount-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .amount-neg { color: #166534; }
   .new-badge { font-size: 10px; padding: 1px 6px; border-radius: var(--radius); background: #fff2cc; color: #7d5a00; border: 0.5px solid #ffe08a; white-space: nowrap; }
@@ -714,11 +716,21 @@ function renderResults() {
     </div>
     ${filterBar}
     <div class="table-wrap"><table>
+      <colgroup>
+        <col style="width:7%">
+        <col style="width:24%">
+        <col style="width:9%">
+        <col style="width:8%">
+        <col style="width:14%">
+        <col style="width:14%">
+        <col style="width:16%">
+        <col style="width:8%">
+      </colgroup>
       <thead><tr>
         <th>Date</th><th>Merchant / Note</th><th>Type</th><th>Amount</th>
         <th>Category</th>
-        <th>Spending category</th>
-        <th style="min-width:140px">Notes</th><th></th>
+        <th>Spending</th>
+        <th>Notes</th><th></th>
       </tr></thead>
       <tbody>
         ${filteredRows.map((r) => {
@@ -750,7 +762,7 @@ function renderResults() {
             <td class="merchant-cell" title="${r.business}">
               ${r.business}${personLine}${badge}
             </td>
-            <td style="font-size:12px;color:var(--text-muted)">${r.bankCategory || '—'}</td>
+            <td class="type-cell">${r.bankCategory || '—'}</td>
             <td class="amount-cell ${r.isCredit ? 'amount-neg' : ''}">${r.isCredit ? '-' : ''}$${Math.abs(r.amount).toFixed(2)}</td>
             <td>
               ${catPillVars
@@ -761,7 +773,7 @@ function renderResults() {
                 ? `<span class="pill-cell" id="spend-pill-${i}" style="${spendPillVars}"><select id="spend-sel-${i}" class="pill-select" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></span>`
                 : `<span id="spend-pill-${i}"><select id="spend-sel-${i}" onchange="updateRow(${i},'spending_category',this.value)" ${r.isDuplicate ? 'disabled' : ''}>${SPENDING_CATS.map(c => `<option ${c===r.spending_category?'selected':''}>${c}</option>`).join('')}</select></span>`}</td>
             <td><input type="text" value="${r.notes||''}" oninput="updateRow(${i},'notes',this.value)" placeholder="—" ${r.isDuplicate ? 'disabled' : ''}></td>
-            <td>${(r.isNew || r.isFromHistory) && !r.isDuplicate ? `<button class="btn-ghost" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="saveRule(${i})">Save rule</button>` : ''}</td>
+            <td class="action-cell">${(r.isNew || r.isFromHistory) && !r.isDuplicate ? `<button class="btn-ghost" style="font-size:10px;padding:3px 6px" onclick="saveRule(${i})">Save</button>` : ''}</td>
           </tr>`;
         }).join('')}
       </tbody>
