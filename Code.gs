@@ -1,4 +1,6 @@
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DEFAULT_ROW_BG = '#ffffff';
+const DEFAULT_ROW_FONT = '#000000';
 
 function doGet(e) {
   if (e.parameter.action === 'read') {
@@ -124,24 +126,38 @@ function doPost(e) {
         const isAmazon = String(tx.business).toUpperCase().includes('AMAZON');
         const isAmazonGrocery = isAmazon && String(tx.category).trim() === 'Grocery';
 
-        let catBg = null;
         const isAmazonHighlight = isAmazon && !isAmazonGrocery;
+        const color = categoryColors[String(tx.category).trim()];
+
+        // A–C and F stay neutral (white bg, black font). Category colors apply to D–E only,
+        // except Amazon review rows use yellow across the full row.
+        const rowBg = [
+          DEFAULT_ROW_BG, DEFAULT_ROW_BG, DEFAULT_ROW_BG,
+          DEFAULT_ROW_BG, DEFAULT_ROW_BG, DEFAULT_ROW_BG
+        ];
         if (isAmazonHighlight) {
-          catBg = '#fff2cc';
-        } else {
-          const color = categoryColors[String(tx.category).trim()];
-          if (color) catBg = color.bg;
+          for (let c = 0; c < 6; c++) rowBg[c] = '#fff2cc';
+        } else if (color && color.bg) {
+          rowBg[3] = color.bg;
+          rowBg[4] = color.bg;
         }
 
-        // backgrounds: highlight spans all 6 columns so the full row is visually marked;
-        // fontColors: explicitly set every column to black so inherited row formatting is always cleared;
-        // Amazon D–E get dark brown for contrast against the yellow background
-        const deFontColor = isAmazonHighlight ? '#7d5a00' : '#000000';
-        backgrounds.push([catBg, catBg, catBg, catBg, catBg, catBg]);
-        fontColors.push(['#000000', '#000000', '#000000', deFontColor, deFontColor, '#000000']);
+        let deFontColor = DEFAULT_ROW_FONT;
+        if (isAmazonHighlight) {
+          deFontColor = '#7d5a00';
+        } else if (color && color.text) {
+          deFontColor = color.text;
+        }
+
+        backgrounds.push(rowBg);
+        fontColors.push([
+          DEFAULT_ROW_FONT, DEFAULT_ROW_FONT, DEFAULT_ROW_FONT,
+          deFontColor, deFontColor,
+          DEFAULT_ROW_FONT
+        ]);
       });
 
-      const range = sheet.getRange(appendAt, 1, n, 6);
+      const range = sheet.getRange(`A${appendAt}:F${appendAt + n - 1}`);
       range.setValues(values);
       range.setBackgrounds(backgrounds);
       range.setFontColors(fontColors);
