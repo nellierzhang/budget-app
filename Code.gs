@@ -45,7 +45,9 @@ function readExistingKeys() {
         // Build duplicate-detection key
         let dateStr = '';
         if (date instanceof Date) {
-          dateStr = `${date.getMonth()+1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)}`;
+          const mm = String(date.getMonth() + 1).padStart(2, '0');
+          const dd = String(date.getDate()).padStart(2, '0');
+          dateStr = `${mm}/${dd}/${date.getFullYear()}`;
         } else {
           dateStr = String(date);
         }

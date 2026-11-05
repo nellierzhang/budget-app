@@ -17,7 +17,7 @@ The spreadsheet has **12 tabs**, one per month: `January` through `December`.
 
 | Col | Letter | Field              | Type                          | Notes                                      |
 |-----|--------|--------------------|-------------------------------|--------------------------------------------|
-| 1   | A      | `date`             | Date or M/D/YY string         | Used in duplicate-detection key            |
+| 1   | A      | `date`             | Date or MM/DD/YYYY string     | Used in duplicate-detection key            |
 | 2   | B      | `business`         | string                        | Merchant name; normalized `.toUpperCase().trim()` for keys |
 | 3   | C      | `amount`           | number (float)                | Stored as-is; absolute value used in keys  |
 | 4   | D      | `category`         | string                        | e.g. `"Groceries"`, `"Dining"`             |
@@ -29,7 +29,7 @@ The spreadsheet has **12 tabs**, one per month: `January` through `December`.
 ```js
 {
   month: "January",          // routes to the correct sheet tab
-  date: "7/4/26",            // written to col A
+  date: "07/04/2026",        // written to col A
   business: "Whole Foods",   // written to col B
   amount: 42.50,             // written to col C
   category: "Groceries",     // written to col D
@@ -42,7 +42,7 @@ The spreadsheet has **12 tabs**, one per month: `January` through `December`.
 
 ```js
 const key = `${dateStr}|${business.toUpperCase().trim()}|${Math.abs(amount).toFixed(2)}`;
-// e.g. "7/4/26|WHOLE FOODS|42.50"
+// e.g. "07/04/2026|WHOLE FOODS|42.50"
 ```
 
 ## Row Coloring Rules
@@ -56,7 +56,7 @@ const key = `${dateStr}|${business.toUpperCase().trim()}|${Math.abs(amount).toFi
 ```js
 {
   success: true,
-  existingKeys: ["7/4/26|WHOLE FOODS|42.50", ...],
+  existingKeys: ["07/04/2026|WHOLE FOODS|42.50", ...],
   merchantHistory: {
     "WHOLE FOODS": { category: "Groceries", spending_category: "Needs" }
   },

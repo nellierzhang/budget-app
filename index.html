@@ -366,6 +366,14 @@ function parseDateStr(val) {
   const d = new Date(val); return isNaN(d.getTime()) ? null : d;
 }
 
+// Canonical on-screen / on-sheet date format: MM/DD/YYYY
+function formatDateMDY(d) {
+  if (!d) return '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${mm}/${dd}/${d.getFullYear()}`;
+}
+
 function matchMerchantRule(merchant) {
   const m = normalizeMerchantName(merchant);
   for (const [key, val] of Object.entries(userRules)) {
@@ -536,9 +544,7 @@ function parseVenmoCSV(text) {
     const dateRaw = get(datetimeIdx);
     let d = dateRaw ? new Date(dateRaw) : null;
     if (d && isNaN(d.getTime())) d = null;
-    const dateStr = d
-      ? `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`
-      : dateRaw;
+    const dateStr = d ? formatDateMDY(d) : dateRaw;
 
     const note = get(noteIdx);
     const from = get(fromIdx);
@@ -667,8 +673,9 @@ function parseCapitalOneCSV(text) {
     const bankCat = catIdx >= 0 ? cols[catIdx] || '' : '';
     if (SKIP_KEYWORDS.some(kw => desc.toUpperCase().includes(kw))) { skipped++; return; }
     if (bankCat === 'Payment/Credit' || bankCat === 'Payment') { skipped++; return; }
-    const dateStr = txDateIdx >= 0 ? cols[txDateIdx] || '' : '';
-    const d = parseDateStr(dateStr);
+    const rawDateStr = txDateIdx >= 0 ? cols[txDateIdx] || '' : '';
+    const d = parseDateStr(rawDateStr);
+    const dateStr = d ? formatDateMDY(d) : rawDateStr;
     const debit = debitIdx >= 0 ? parseFloat(cols[debitIdx]) || 0 : 0;
     const credit = creditIdx >= 0 ? parseFloat(cols[creditIdx]) || 0 : 0;
     const amount = debit > 0 ? debit : credit > 0 ? -credit : 0;
